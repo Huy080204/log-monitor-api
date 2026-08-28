@@ -92,17 +92,12 @@ public class NotificationQueryController extends ABasicController {
         NotificationQuery notificationQuery = notificationQueryRepository.findById(updateNotificationQueryForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found notification query", ErrorCode.NOTIFICATION_QUERY_ERROR_NOT_FOUND));
 
-        NotificationGroup notificationGroup = notificationGroupRepository.findById(updateNotificationQueryForm.getNotificationGroupId())
-                .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
-
-        boolean queryChanged = !notificationQuery.getQuery().equals(updateNotificationQueryForm.getQuery())
-                || !notificationQuery.getNotificationGroup().getId().equals(updateNotificationQueryForm.getNotificationGroupId());
-        if (queryChanged && notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive(updateNotificationQueryForm.getQuery(), updateNotificationQueryForm.getNotificationGroupId())) {
+        boolean queryChanged = !notificationQuery.getQuery().equals(updateNotificationQueryForm.getQuery());
+        if (queryChanged && notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive(updateNotificationQueryForm.getQuery(), notificationQuery.getNotificationGroup().getId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 
         notificationQueryMapper.updateEntityFromForm(updateNotificationQueryForm, notificationQuery);
-        notificationQuery.setNotificationGroup(notificationGroup);
         notificationQueryRepository.save(notificationQuery);
         return makeSuccessResponse("Update notification query success");
     }

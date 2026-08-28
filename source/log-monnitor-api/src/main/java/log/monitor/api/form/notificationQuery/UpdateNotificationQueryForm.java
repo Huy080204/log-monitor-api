@@ -23,9 +23,4 @@ public class UpdateNotificationQueryForm {
     @NotNull(message = "count cannot be null")
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
-
-    @NotNull(message = "notificationGroupId cannot be null")
-    @JsonDeserialize(using = StringToLongDeserializer.class)
-    @Schema(name = "notificationGroupId", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long notificationGroupId;
 }
