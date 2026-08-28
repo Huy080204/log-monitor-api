@@ -60,8 +60,10 @@ def buildDev(){
     if (_BRANCH_NAME.matches(TARTGET_BRANCH_DEPLOY)) {
 
         stage("Build source") {
-            withEnv( ["PATH+MAVEN=/usr/bin"] ) {
+            def jdkHome = tool name: 'jdk11', type: 'jdk'
+            withEnv( ["PATH+MAVEN=/usr/bin", "JAVA_HOME=${jdkHome}", "PATH+JDK=${jdkHome}/bin"] ) {
                 sh """
+                    java -version
                     cp -r source/log-monnitor-api/* dev-ops/
                     cd dev-ops
                     cp config/* src/main/resources/
