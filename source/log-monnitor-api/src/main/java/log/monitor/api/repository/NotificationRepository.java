@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long>, JpaSpecificationExecutor<Notification> {
 
+    Notification findFirstByNotificationGroupType(Integer type);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Notification n WHERE n.notificationGroup.id = :notificationGroupId")

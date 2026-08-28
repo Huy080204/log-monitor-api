@@ -4,11 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import log.monitor.api.constant.BaseConstant;
+import log.monitor.api.model.Notification;
 import log.monitor.api.model.NotificationGroup;
 import log.monitor.api.model.NotificationQuery;
 import log.monitor.api.repository.NotificationGroupRepository;
 import log.monitor.api.repository.NotificationQueryRepository;
-import log.monitor.api.service.SlackAlertService;
+import log.monitor.api.repository.NotificationRepository;
 import log.monitor.api.service.feign.FeignConst;
 import log.monitor.api.service.feign.FeignVictoriaLogsService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,6 @@ import java.util.Map;
 @Slf4j
 public class VictoriaLogsErrorAlertScheduler {
 
-    private static final String STATS_ALIAS_PREFIX = "q_";
-
     @Autowired
     private FeignVictoriaLogsService feignVictoriaLogsService;
 
@@ -38,7 +37,7 @@ public class VictoriaLogsErrorAlertScheduler {
     private NotificationQueryRepository notificationQueryRepository;
 
     @Autowired
-    private SlackAlertService slackAlertService;
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -83,12 +82,18 @@ public class VictoriaLogsErrorAlertScheduler {
 
         String title = String.format("🚨 [%s] %d app vượt ngưỡng trong %s",
                 activeGroup.getName(), apps.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
-        slackAlertService.sendMessage(title, lines);
+
+        String message = title + "\n" + String.join("\n", lines);
+        Notification notification = new Notification();
+        notification.setMessage(message);
+        notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
+        notification.setNotificationGroup(activeGroup);
+        notificationRepository.save(notification);
     }
 
     /**
      * Runs one LogsQL request grouped by application, with a conditional count per
-     * NotificationQuery (`count() if (<filter>) as q_<id>`), then keeps only the
+     * NotificationQuery (`count() if (<filter>) as "<id>"`), then keeps only the
      * (app, query) pairs whose count reached that query's own threshold.
      */
     private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) throws Exception {
@@ -124,14 +129,15 @@ public class VictoriaLogsErrorAlertScheduler {
             }
             stats.append("count() if (")
                     .append(notificationQuery.getQuery())
-                    .append(") as ")
-                    .append(statsAlias(notificationQuery));
+                    .append(") as \"")
+                    .append(statsAlias(notificationQuery))
+                    .append("\"");
         }
         return String.format("_time:%s | stats by (%s) %s",
                 BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 
     private String statsAlias(NotificationQuery notificationQuery) {
-        return STATS_ALIAS_PREFIX + notificationQuery.getId();
+        return String.valueOf(notificationQuery.getId());
     }
 }
