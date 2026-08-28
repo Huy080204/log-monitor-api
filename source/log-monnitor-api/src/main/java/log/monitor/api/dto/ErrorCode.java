@@ -24,6 +24,24 @@ public class ErrorCode {
     public static final String SETTING_ERROR_EXISTED_GROUP_NAME_AND_KEY_NAME = "ERROR-SETTING-0001";
 
     /**
+     * Starting error code NotificationGroup
+     */
+    public static final String NOTIFICATION_GROUP_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-GROUP-0000";
+    public static final String NOTIFICATION_GROUP_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-GROUP-0001";
+    public static final String NOTIFICATION_GROUP_ERROR_DELETE_ACTIVE = "ERROR-NOTIFICATION-GROUP-0002";
+
+    /**
+     * Starting error code Notification
+     */
+    public static final String NOTIFICATION_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-0000";
+
+    /**
+     * Starting error code NotificationQuery
+     */
+    public static final String NOTIFICATION_QUERY_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-QUERY-0000";
+    public static final String NOTIFICATION_QUERY_ERROR_EXISTED = "ERROR-NOTIFICATION-QUERY-0001";
+
+    /**
      * Starting error code DATABASE_ERROR
      */
     public static final String ERROR_DB_QUERY = "ERROR-DB-QUERY-0000";
