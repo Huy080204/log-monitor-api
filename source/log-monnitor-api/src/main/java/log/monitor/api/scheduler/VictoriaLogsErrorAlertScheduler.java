@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,67 +59,63 @@ public class VictoriaLogsErrorAlertScheduler {
         }
 
         String query = buildQuery(notificationQueries);
-        Map<Long, Integer> countsByQueryId;
+        Map<String, List<String>> breachLinesByApp;
         try {
-            countsByQueryId = queryCountsByNotificationQuery(query, notificationQueries);
+            breachLinesByApp = queryBreachesByApp(query, notificationQueries);
         } catch (Exception e) {
             log.error("Failed to query VictoriaLogs [{}]", query, e);
             return;
         }
 
-        List<NotificationQuery> breaching = new ArrayList<>();
-        for (NotificationQuery notificationQuery : notificationQueries) {
-            int count = countsByQueryId.getOrDefault(notificationQuery.getId(), 0);
-            if (count >= notificationQuery.getCount()) {
-                breaching.add(notificationQuery);
-            }
-        }
-
-        if (breaching.isEmpty()) {
-            log.debug("No notification query crossed its threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+        if (breachLinesByApp.isEmpty()) {
+            log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
             return;
         }
 
-        List<String> lines = new ArrayList<>();
-        for (NotificationQuery notificationQuery : breaching) {
-            int count = countsByQueryId.getOrDefault(notificationQuery.getId(), 0);
-            lines.add(String.format(":red_circle: `%s` — %d lỗi trong %s (ngưỡng %d)",
-                    notificationQuery.getQuery(), count, BaseConstant.VICTORIALOGS_QUERY_WINDOW, notificationQuery.getCount()));
-        }
-        Collections.sort(lines);
+        List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
+        Collections.sort(apps);
 
-        String title = String.format("🚨 [%s] %d notification query vượt ngưỡng trong %s",
-                activeGroup.getName(), breaching.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+        List<String> lines = new ArrayList<>();
+        for (String app : apps) {
+            lines.add(String.format("*%s*", app));
+            lines.addAll(breachLinesByApp.get(app));
+        }
+
+        String title = String.format("🚨 [%s] %d app vượt ngưỡng trong %s",
+                activeGroup.getName(), apps.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
         slackAlertService.sendMessage(title, lines);
     }
 
-    private Map<Long, Integer> queryCountsByNotificationQuery(String query, List<NotificationQuery> notificationQueries) throws Exception {
-        Map<Long, Integer> counts = new HashMap<>();
+    /**
+     * Runs one LogsQL request grouped by application, with a conditional count per
+     * NotificationQuery (`count() if (<filter>) as q_<id>`), then keeps only the
+     * (app, query) pairs whose count reached that query's own threshold.
+     */
+    private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) throws Exception {
+        Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         String rawBody = feignVictoriaLogsService.query(FeignConst.LOGIN_TYPE_NO_AUTH, query);
         if (rawBody == null || rawBody.trim().isEmpty()) {
-            return counts;
+            return breachLinesByApp;
         }
 
         MappingIterator<Map<String, String>> lines = objectMapper
                 .readerFor(new TypeReference<Map<String, String>>() {})
                 .readValues(rawBody);
-        if (!lines.hasNext()) {
-            return counts;
+        while (lines.hasNext()) {
+            Map<String, String> line = lines.next();
+            String app = line.getOrDefault(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, "unknown");
+            for (NotificationQuery notificationQuery : notificationQueries) {
+                String value = line.get(statsAlias(notificationQuery));
+                int count = value == null || value.isEmpty() ? 0 : Integer.parseInt(value);
+                if (count >= notificationQuery.getCount()) {
+                    breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
+                            .add(String.format("  • `%s`: %d", notificationQuery.getQuery(), count));
+                }
+            }
         }
-
-        Map<String, String> statsLine = lines.next();
-        for (NotificationQuery notificationQuery : notificationQueries) {
-            String value = statsLine.get(statsAlias(notificationQuery));
-            counts.put(notificationQuery.getId(), value == null || value.isEmpty() ? 0 : Integer.parseInt(value));
-        }
-        return counts;
+        return breachLinesByApp;
     }
 
-    /**
-     * Batches every active NotificationQuery into a single LogsQL request using conditional
-     * stats (`count() if (<filter>)`), so each query's match count is fetched in one call
-     * instead of one VictoriaLogs request per query.
-     */
     private String buildQuery(List<NotificationQuery> notificationQueries) {
         StringBuilder stats = new StringBuilder();
         for (NotificationQuery notificationQuery : notificationQueries) {
@@ -131,7 +127,8 @@ public class VictoriaLogsErrorAlertScheduler {
                     .append(") as ")
                     .append(statsAlias(notificationQuery));
         }
-        return String.format("_time:%s | stats %s", BaseConstant.VICTORIALOGS_QUERY_WINDOW, stats);
+        return String.format("_time:%s | stats by (%s) %s",
+                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 
     private String statsAlias(NotificationQuery notificationQuery) {
