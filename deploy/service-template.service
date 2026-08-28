@@ -1,0 +1,12 @@
+[Unit]
+Description=BBB Api Service 
+
+[Service]
+#User=root #use user with restricted permissions
+#Type=simple
+
+ExecStart=/usr/bin/java -jar -Dfile.encoding=UTF-8 -Dspring.config.location={CONFIG_LOCATION}/ -Dspring.profiles.active={ENV} -Djava.security.egd=file:/dev/./urandom {CONFIG_LOCATION}/app.jar
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

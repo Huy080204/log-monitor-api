@@ -1,0 +1,17 @@
+[Unit]
+Description=Log Monitor API Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory={CONFIG_LOCATION}
+
+ExecStart=/usr/bin/java -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active={ENV} -cp "app.jar:lib/*" log.monitor.api.Application --server.address=0.0.0.0
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={APP_ID}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

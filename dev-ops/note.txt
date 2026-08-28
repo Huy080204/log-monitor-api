@@ -1,0 +1,14 @@
+/--------------------------------------------------------------------------------------/
+- dump all data, structure, foreign keyfrom db
+mvn liquibase:generateChangeLog -Dliquibase.diffTypes=tables,views,columns,indexes,foreignkeys,primarykeys,uniqueconstraints,data
+
+/---------------------------------------------------------------------------------------/
+- Reset changelog
+- Step 1: Run sql command
+DELETE from DATABASECHANGELOG;
+- Step 2: Build and run project
+
+/---------------------------------------------------------------------------------------/
+- init project
+- Step 1: Create app in MediaBucket
+- Step 2: Create app in Sso

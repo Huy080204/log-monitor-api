@@ -1,0 +1,8 @@
+MYSQL: 
+
+CREATE DATABASE db_storagemgr CHARACTER SET utf8;
+CREATE USER 'db_storagemgrusr' IDENTIFIED BY 'CnVfTnXLcRc2tzpp5dsd2xQE1cPDissdBDfTTVvnuwb8ydQUAjG65YttXSwoNZaaECwXJeo4SzkVMABvZgFauQ';
+CREATE USER 'db_storagemgrusr'@'localhost' IDENTIFIED BY 'CnVfTnXLcRc2tzpp5dsd2xQE1cPDissdBDfTTVvnuwb8ydQUAjG65YttXSwoNZaaECwXJeo4SzkVMABvZgFauQ';
+
+GRANT ALL PRIVILEGES ON db_storagemgr.* TO 'db_storagemgrusr';
+FLUSH PRIVILEGES;

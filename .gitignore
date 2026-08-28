@@ -1,0 +1,51 @@
+HELP.md
+target/
+logs/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+*.log
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### project ignore ###
+source/log-monnitor-api/application-production.properties
+source/log-monnitor-api/deploy_ec2.sh
+source/log-monnitor-api/execute_jar_on_vm.sh
+source/log-monnitor-api/target
+source/log-monnitor-api/logs
+source/log-monnitor-api/.idea
+source/log-monnitor-api/*.iml
+
+### Vibe Setting ###
+.claude
+vibe_setting.json
+ai-setup
+ai-setup.ps1
+bash.exe.stackdump
