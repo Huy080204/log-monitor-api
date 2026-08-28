@@ -23,6 +23,14 @@ public class BaseConstant {
     public static final String SETTING_GROUP_NOTIFICATION = "notification";
     public static final String SETTING_KEY_SLACK_ERROR_ALERT = "slack_error_alert";
 
+    // NotificationGroup channel type
+    public static final Integer NOTIFICATION_CHANNEL_TYPE_TELEGRAM = 0;
+    public static final Integer NOTIFICATION_CHANNEL_TYPE_SLACK = 1;
+
+    // Notification state
+    public static final Integer NOTIFICATION_STATE_SENT = 0;
+    public static final Integer NOTIFICATION_STATE_READ = 1;
+
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
     public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
