@@ -32,11 +32,7 @@ public class BaseConstant {
     public static final Integer NOTIFICATION_STATE_READ = 1;
 
     // VictoriaLogs error-alert scheduler query config
-    public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
     public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
-    public static final String VICTORIALOGS_ERROR_FIELD = "_msg";
-    public static final String VICTORIALOGS_ERROR_VALUE = "ERROR";
-    public static final Integer VICTORIALOGS_ERROR_THRESHOLD = 25;
 
     private BaseConstant() {
         throw new IllegalStateException("Utility class");

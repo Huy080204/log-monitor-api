@@ -110,7 +110,7 @@ class NotificationQueryControllerTest {
         NotificationGroup group = new NotificationGroup();
         group.setId(1L);
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive("_time:5m error:true", 1L)).thenReturn(true);
+        when(notificationQueryRepository.existsByQueryAndNotificationGroupId("_time:5m error:true", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.create(form, bindingResult))
                 .isInstanceOf(BadRequestException.class)
@@ -128,7 +128,7 @@ class NotificationQueryControllerTest {
         NotificationQuery entity = new NotificationQuery();
         NotificationQueryDto idDto = new NotificationQueryDto();
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive("_time:5m error:true", 1L)).thenReturn(false);
+        when(notificationQueryRepository.existsByQueryAndNotificationGroupId("_time:5m error:true", 1L)).thenReturn(false);
         when(notificationQueryMapper.fromFormToEntity(form)).thenReturn(entity);
         when(notificationQueryMapper.fromEntityToNotificationQueryIdDto(entity)).thenReturn(idDto);
 
@@ -152,39 +152,19 @@ class NotificationQueryControllerTest {
     }
 
     @Test
-    void shouldThrowNotFoundWhenUpdateNotificationGroupDoesNotExist() {
+    void shouldThrowBadRequestWhenUpdateQueryExistedForGroup() {
         UpdateNotificationQueryForm form = new UpdateNotificationQueryForm();
         form.setId(1L);
-        form.setNotificationGroupId(2L);
-        form.setQuery("_time:5m error:true");
-        NotificationQuery entity = new NotificationQuery();
-        entity.setId(1L);
-        when(notificationQueryRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(notificationGroupRepository.findById(2L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> controller.update(form, bindingResult))
-                .isInstanceOf(NotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND);
-    }
-
-    @Test
-    void shouldThrowBadRequestWhenUpdateQueryExistedForChangedGroup() {
-        UpdateNotificationQueryForm form = new UpdateNotificationQueryForm();
-        form.setId(1L);
-        form.setNotificationGroupId(2L);
         form.setQuery("_time:5m error:true");
         form.setCount(10);
-        NotificationGroup oldGroup = new NotificationGroup();
-        oldGroup.setId(1L);
+        NotificationGroup group = new NotificationGroup();
+        group.setId(1L);
         NotificationQuery entity = new NotificationQuery();
         entity.setId(1L);
-        entity.setQuery("_time:5m error:true");
-        entity.setNotificationGroup(oldGroup);
-        NotificationGroup newGroup = new NotificationGroup();
-        newGroup.setId(2L);
+        entity.setQuery("_time:1m error:true");
+        entity.setNotificationGroup(group);
         when(notificationQueryRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(notificationGroupRepository.findById(2L)).thenReturn(Optional.of(newGroup));
-        when(notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive("_time:5m error:true", 2L)).thenReturn(true);
+        when(notificationQueryRepository.existsByQueryAndNotificationGroupId("_time:5m error:true", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.update(form, bindingResult))
                 .isInstanceOf(BadRequestException.class)
@@ -192,10 +172,9 @@ class NotificationQueryControllerTest {
     }
 
     @Test
-    void shouldSkipExistenceCheckWhenUpdateQueryAndGroupUnchanged() {
+    void shouldSkipExistenceCheckWhenUpdateQueryUnchanged() {
         UpdateNotificationQueryForm form = new UpdateNotificationQueryForm();
         form.setId(1L);
-        form.setNotificationGroupId(1L);
         form.setQuery("_time:5m error:true");
         form.setCount(20);
         NotificationGroup group = new NotificationGroup();
@@ -205,14 +184,12 @@ class NotificationQueryControllerTest {
         entity.setQuery("_time:5m error:true");
         entity.setNotificationGroup(group);
         when(notificationQueryRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
 
         ApiMessageDto<Void> result = controller.update(form, bindingResult);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Update notification query success");
-        assertThat(entity.getNotificationGroup()).isSameAs(group);
-        verify(notificationQueryRepository, never()).existsByQueryAndNotificationGroupIdCaseSensitive(any(), any());
+        verify(notificationQueryRepository, never()).existsByQueryAndNotificationGroupId(any(), any());
         verify(notificationQueryRepository).save(entity);
     }
 
