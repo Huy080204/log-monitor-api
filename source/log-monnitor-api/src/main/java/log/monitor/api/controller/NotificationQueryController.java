@@ -24,18 +24,11 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/v1/notification-query")
@@ -75,7 +68,7 @@ public class NotificationQueryController extends ABasicController {
         NotificationGroup notificationGroup = notificationGroupRepository.findById(createNotificationQueryForm.getNotificationGroupId())
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
-        if (notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive(createNotificationQueryForm.getQuery(), createNotificationQueryForm.getNotificationGroupId())) {
+        if (notificationQueryRepository.existsByQueryAndNotificationGroupId(createNotificationQueryForm.getQuery(), createNotificationQueryForm.getNotificationGroupId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 
@@ -92,8 +85,8 @@ public class NotificationQueryController extends ABasicController {
         NotificationQuery notificationQuery = notificationQueryRepository.findById(updateNotificationQueryForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found notification query", ErrorCode.NOTIFICATION_QUERY_ERROR_NOT_FOUND));
 
-        boolean queryChanged = !notificationQuery.getQuery().equals(updateNotificationQueryForm.getQuery());
-        if (queryChanged && notificationQueryRepository.existsByQueryAndNotificationGroupIdCaseSensitive(updateNotificationQueryForm.getQuery(), notificationQuery.getNotificationGroup().getId())) {
+        if (!Objects.equals(notificationQuery.getQuery(), updateNotificationQueryForm.getQuery())
+                && notificationQueryRepository.existsByQueryAndNotificationGroupId(updateNotificationQueryForm.getQuery(), notificationQuery.getNotificationGroup().getId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 
