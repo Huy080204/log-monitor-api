@@ -11,7 +11,7 @@ JAR_NAME = "log-monnitor-api-0.0.1.jar"
 
 
 APP_NAME = "log-monnitor-api"
-LOG_PATH="/var/log/logmonitors/api/logmonitors.log"
+LOG_PATH="/var/log/logmonitors/api"
 
 PORT_DEV=1002
 HOST_DEV="192.168.102.7"
