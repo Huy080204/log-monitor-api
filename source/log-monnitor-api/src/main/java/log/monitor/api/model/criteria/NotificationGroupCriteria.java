@@ -17,6 +17,7 @@ import java.util.List;
 public class NotificationGroupCriteria implements Serializable {
 
     private Long id;
+    private String name;
     private Integer status;
     private Integer sortDate; // 1: created date asc, 2: created date desc
 
@@ -30,6 +31,10 @@ public class NotificationGroupCriteria implements Serializable {
                 List<Predicate> predicates = new ArrayList<>();
                 if (getId() != null) {
                     predicates.add(cb.equal(root.get("id"), getId()));
+                }
+
+                if (getName() != null && !getName().isEmpty()) {
+                    predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 
                 if (getStatus() != null) {
