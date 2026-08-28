@@ -1,9 +1,10 @@
 _BUILD_NUMBER = env.BUILD_NUMBER
-_BRANCH_NAME = env.BRANCH_NAME
+// _BRANCH_NAME = env.BRANCH_NAME
+_BRANCH_NAME = env.BRANCH_NAME ?: env.GIT_BRANCH?.replaceFirst("origin/", "") ?: "dev"
 
 TIMEZONE = "GMT+7"
 APP_BOOT_TIME_SECOND = 30
-SLACK_CHANNEL_NAME = "GMQ6JQ1FT"
+SLACK_CHANNEL_NAME = "C0BML3ZENPK"
 
 TARTGET_FOLDER_DEPLOY="/opt/deploy/logmonitors/api"
 JAR_NAME = "log-monnitor-api-0.0.1.jar"
@@ -25,15 +26,16 @@ node{
             notifyBuild("STARTED", SLACK_CHANNEL_NAME)
         }
 
-        stage ("Checkout source") {
+        stage("Checkout source") {
             checkout scm
         }
 
-        stage ("Unit test") {
+        stage("Unit test") {
 
         }
 
         buildDev()
+
 
         currentBuild.result = "SUCCESS"
     } catch (e) {
@@ -57,10 +59,10 @@ node{
 def buildDev(){
     if (_BRANCH_NAME.matches(TARTGET_BRANCH_DEPLOY)) {
 
-        stage ("Build source") {
-            withEnv( ["PATH+MAVEN=/usr/local/src/apache-maven/bin"] ) {
+        stage("Build source") {
+            withEnv( ["PATH+MAVEN=/usr/bin"] ) {
                 sh """
-                    cp -r source/ai-project-api/* dev-ops/
+                    cp -r source/log-monnitor-api/* dev-ops/
                     cd dev-ops
                     cp config/* src/main/resources/
                     mvn clean package -Dmaven.test.skip
@@ -131,9 +133,10 @@ def buildDev(){
                 sshCommand remote: remote, command: "systemctl enable ${APP_NAME}.service"
                 sshCommand remote: remote, command: "systemctl start ${APP_NAME}.service"
             }
+
         }
 
-        stage ("Deploy") {
+        stage("Deploy") {
             sleep(APP_BOOT_TIME_SECOND)
         }
 
@@ -147,7 +150,7 @@ def buildDev(){
 def notifyEnv(String message = "",String channelName) {
     def colorName = "good"
     def emoji = ":white_check_mark:"
-    
+
     def text = "${emoji} ${message}"
     slackSend (channel: channelName, failOnError: true, color: colorName, message: text)
 }
