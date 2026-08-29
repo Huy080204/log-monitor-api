@@ -22,10 +22,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 @Slf4j
 public class VictoriaLogsErrorAlertScheduler {
+
+    private static final String ELLIPSIS = "...";
 
     @Autowired
     private FeignVictoriaLogsService feignVictoriaLogsService;
@@ -44,51 +47,108 @@ public class VictoriaLogsErrorAlertScheduler {
 
     @Scheduled(cron = "0 */5 * * * *")
     public void checkErrorRateAndAlert() {
-        NotificationGroup activeGroup = notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE).orElse(null);
-        if (activeGroup == null) {
-            log.debug("No active notification group configured, skip VictoriaLogs error check");
-            return;
-        }
-
-        List<NotificationQuery> notificationQueries = notificationQueryRepository
-                .findAllByNotificationGroupIdAndStatus(activeGroup.getId(), BaseConstant.STATUS_ACTIVE);
-        if (notificationQueries.isEmpty()) {
-            log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
-            return;
-        }
-
-        String query = buildQuery(notificationQueries);
-        Map<String, List<String>> breachLinesByApp;
         try {
-            breachLinesByApp = queryBreachesByApp(query, notificationQueries);
+            NotificationGroup activeGroup = notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE).orElse(null);
+            if (activeGroup == null) {
+                log.debug("No active notification group configured, skip VictoriaLogs error check");
+                return;
+            }
+
+            List<NotificationQuery> notificationQueries = notificationQueryRepository
+                    .findAllByNotificationGroupIdAndStatus(activeGroup.getId(), BaseConstant.STATUS_ACTIVE);
+            if (notificationQueries.isEmpty()) {
+                log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
+                return;
+            }
+
+            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(buildQuery(notificationQueries), notificationQueries);
+            if (breachLinesByApp.isEmpty()) {
+                log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+                return;
+            }
+
+            List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
+            Collections.sort(apps);
+
+            String title = String.format("🚨 [%s] %d app vượt ngưỡng trong %s",
+                    activeGroup.getName(), apps.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+
+            int budget = messageBudget(activeGroup.getType()) - title.length() - 1;
+            if (budget <= 0) {
+                log.error("Message limit for channel type [{}] is too small for title [{}], skip creating notification",
+                        activeGroup.getType(), title);
+                return;
+            }
+
+            List<Notification> notifications = new ArrayList<>();
+            for (String bodyPart : packBodies(apps, breachLinesByApp, budget)) {
+                Notification notification = new Notification();
+                notification.setMessage(title + "\n" + bodyPart);
+                notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
+                notification.setNotificationGroup(activeGroup);
+                notifications.add(notification);
+            }
+            notificationRepository.saveAll(notifications);
+            log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
         } catch (Exception e) {
-            log.error("Failed to query VictoriaLogs [{}]", query, e);
-            return;
+            log.error("Error occurred in checkErrorRateAndAlert schedule", e);
         }
+    }
 
-        if (breachLinesByApp.isEmpty()) {
-            log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
-            return;
-        }
-
-        List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
-        Collections.sort(apps);
-
-        List<String> lines = new ArrayList<>();
+    /** Append each app block while it still fits the budget, otherwise start a new message. */
+    private List<String> packBodies(List<String> apps, Map<String, List<String>> breachLinesByApp, int budget) {
+        List<String> bodies = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
         for (String app : apps) {
-            lines.add(String.format("*%s*", app));
-            lines.addAll(breachLinesByApp.get(app));
+            for (String chunk : buildAppChunks(app, breachLinesByApp.get(app), budget)) {
+                if (current.length() > 0 && current.length() + 1 + chunk.length() > budget) {
+                    bodies.add(current.toString());
+                    current = new StringBuilder();
+                }
+                if (current.length() > 0) {
+                    current.append("\n");
+                }
+                current.append(chunk);
+            }
         }
+        if (current.length() > 0) {
+            bodies.add(current.toString());
+        }
+        return bodies;
+    }
 
-        String title = String.format("🚨 [%s] %d app vượt ngưỡng trong %s",
-                activeGroup.getName(), apps.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+    /** Render one app block, cut into several chunks only if the block alone exceeds the budget. */
+    private List<String> buildAppChunks(String app, List<String> breachLines, int budget) {
+        String header = String.format("*%s*", app);
+        int headerLength = header.length();
 
-        String message = title + "\n" + String.join("\n", lines);
-        Notification notification = new Notification();
-        notification.setMessage(message);
-        notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
-        notification.setNotificationGroup(activeGroup);
-        notificationRepository.save(notification);
+        List<String> chunks = new ArrayList<>();
+        StringBuilder chunk = new StringBuilder(header);
+        for (String breachLine : breachLines) {
+            String line = truncate(breachLine, budget - headerLength - 1);
+            if (chunk.length() > headerLength && chunk.length() + 1 + line.length() > budget) {
+                chunks.add(chunk.toString());
+                chunk = new StringBuilder(header);
+            }
+            chunk.append("\n").append(line);
+        }
+        chunks.add(chunk.toString());
+        return chunks;
+    }
+
+    /** Max message length the target channel accepts. */
+    private int messageBudget(Integer channelType) {
+        return Objects.equals(channelType, BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM)
+                ? BaseConstant.NOTIFICATION_MESSAGE_MAX_LENGTH_TELEGRAM
+                : BaseConstant.NOTIFICATION_MESSAGE_MAX_LENGTH_SLACK;
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (maxLength <= 0 || value.length() <= maxLength) {
+            return value;
+        }
+        return maxLength <= ELLIPSIS.length() ? value.substring(0, maxLength)
+                : value.substring(0, maxLength - ELLIPSIS.length()) + ELLIPSIS;
     }
 
     /**

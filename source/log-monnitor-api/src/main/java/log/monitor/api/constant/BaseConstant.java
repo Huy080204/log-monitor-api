@@ -27,6 +27,10 @@ public class BaseConstant {
     public static final Integer NOTIFICATION_STATE_SENT = 0;
     public static final Integer NOTIFICATION_STATE_READ = 1;
 
+    // Max message length per channel
+    public static final int NOTIFICATION_MESSAGE_MAX_LENGTH_SLACK = 40000;
+    public static final int NOTIFICATION_MESSAGE_MAX_LENGTH_TELEGRAM = 4096;
+
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
