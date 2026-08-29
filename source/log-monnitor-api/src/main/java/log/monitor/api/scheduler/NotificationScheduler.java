@@ -33,7 +33,7 @@ public class NotificationScheduler {
     @Autowired
     private SlackService slackService;
 
-    @Scheduled(fixedDelayString = "60000", zone = "UTC")
+    @Scheduled(fixedDelay = 60000, zone = "UTC")
     public void sendPendingNotifications() {
         Notification telegramNotification = notificationRepository
                 .findFirstByNotificationGroupType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
