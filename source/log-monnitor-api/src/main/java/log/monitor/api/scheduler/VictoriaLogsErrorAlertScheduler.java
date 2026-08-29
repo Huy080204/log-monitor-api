@@ -48,6 +48,7 @@ public class VictoriaLogsErrorAlertScheduler {
     @Scheduled(cron = "0 */5 * * * *")
     public void checkErrorRateAndAlert() {
         try {
+            log.info("Start checkErrorRateAndAlert");
             NotificationGroup activeGroup = notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE).orElse(null);
             if (activeGroup == null) {
                 log.debug("No active notification group configured, skip VictoriaLogs error check");
