@@ -34,6 +34,7 @@ public class BaseConstant {
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
+    public static final String VICTORIALOGS_QUERY_MESSAGE_FIELD = "_msg";
 
     private BaseConstant() {
         throw new IllegalStateException("Utility class");
