@@ -68,6 +68,10 @@ public class NotificationQueryController extends ABasicController {
         NotificationGroup notificationGroup = notificationGroupRepository.findById(createNotificationQueryForm.getNotificationGroupId())
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
+        if (notificationQueryRepository.existsByNameAndNotificationGroupId(createNotificationQueryForm.getName(), createNotificationQueryForm.getNotificationGroupId())) {
+            throw new BadRequestException("Notification query name existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_NAME_EXISTED);
+        }
+
         if (notificationQueryRepository.existsByQueryAndNotificationGroupId(createNotificationQueryForm.getQuery(), createNotificationQueryForm.getNotificationGroupId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
@@ -84,6 +88,11 @@ public class NotificationQueryController extends ABasicController {
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdateNotificationQueryForm updateNotificationQueryForm, BindingResult bindingResult) {
         NotificationQuery notificationQuery = notificationQueryRepository.findById(updateNotificationQueryForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found notification query", ErrorCode.NOTIFICATION_QUERY_ERROR_NOT_FOUND));
+
+        if (!Objects.equals(notificationQuery.getName(), updateNotificationQueryForm.getName())
+                && notificationQueryRepository.existsByNameAndNotificationGroupId(updateNotificationQueryForm.getName(), notificationQuery.getNotificationGroup().getId())) {
+            throw new BadRequestException("Notification query name existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_NAME_EXISTED);
+        }
 
         if (!Objects.equals(notificationQuery.getQuery(), updateNotificationQueryForm.getQuery())
                 && notificationQueryRepository.existsByQueryAndNotificationGroupId(updateNotificationQueryForm.getQuery(), notificationQuery.getNotificationGroup().getId())) {

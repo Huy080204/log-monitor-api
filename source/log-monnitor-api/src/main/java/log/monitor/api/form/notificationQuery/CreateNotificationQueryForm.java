@@ -11,6 +11,10 @@ import javax.validation.constraints.NotNull;
 @Data
 @Schema
 public class CreateNotificationQueryForm {
+    @NotBlank(message = "name cannot be null")
+    @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String name;
+
     @NotBlank(message = "query cannot be null")
     @Schema(name = "query", requiredMode = Schema.RequiredMode.REQUIRED)
     private String query;

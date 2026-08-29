@@ -21,6 +21,7 @@ import java.util.List;
 public interface NotificationQueryMapper {
 
     @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
     @Mapping(source = "notificationGroup", target = "notificationGroup", qualifiedByName = "fromEntityToNotificationGroupDtoAutoComplete")
@@ -34,12 +35,14 @@ public interface NotificationQueryMapper {
     @IterableMapping(elementTargetType = NotificationQueryDto.class, qualifiedByName = "fromEntityToNotificationQueryDto")
     List<NotificationQueryDto> fromEntityListToNotificationQueryDtoList(List<NotificationQuery> notificationQueries);
 
+    @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromCreateFormToEntity")
     NotificationQuery fromFormToEntity(CreateNotificationQueryForm createNotificationQueryForm);
 
+    @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
     @BeanMapping(ignoreByDefault = true)

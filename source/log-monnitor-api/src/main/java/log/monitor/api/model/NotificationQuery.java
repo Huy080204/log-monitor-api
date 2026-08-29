@@ -17,6 +17,8 @@ import javax.persistence.Table;
 @Getter
 @Setter
 public class NotificationQuery extends Auditable<String> {
+    private String name;
+
     private String query;
 
     private Integer count;
