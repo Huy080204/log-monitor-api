@@ -19,10 +19,6 @@ public class BaseConstant {
     public static final String HEADER_CLIENT_TYPE = "X-Client-Type";
     public static final String HEADER_CLIENT_TYPE_WEB = "WEB";
 
-    // Setting keys used by VictoriaLogs error-alert scheduler to resolve Slack bot token/channel
-    public static final String SETTING_GROUP_NOTIFICATION = "notification";
-    public static final String SETTING_KEY_SLACK_ERROR_ALERT = "slack_error_alert";
-
     // NotificationGroup channel type
     public static final Integer NOTIFICATION_CHANNEL_TYPE_TELEGRAM = 0;
     public static final Integer NOTIFICATION_CHANNEL_TYPE_SLACK = 1;
@@ -31,8 +27,13 @@ public class BaseConstant {
     public static final Integer NOTIFICATION_STATE_SENT = 0;
     public static final Integer NOTIFICATION_STATE_READ = 1;
 
+    // Max message length per channel
+    public static final int NOTIFICATION_MESSAGE_MAX_LENGTH_SLACK = 40000;
+    public static final int NOTIFICATION_MESSAGE_MAX_LENGTH_TELEGRAM = 4096;
+
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
+    public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
 
     private BaseConstant() {
         throw new IllegalStateException("Utility class");
