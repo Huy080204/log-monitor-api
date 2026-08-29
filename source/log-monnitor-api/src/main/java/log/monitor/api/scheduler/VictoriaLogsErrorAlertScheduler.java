@@ -71,9 +71,7 @@ public class VictoriaLogsErrorAlertScheduler {
             List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
             Collections.sort(apps);
 
-            String title = String.format("🚨 [%s] %d app vượt ngưỡng trong %s",
-                    activeGroup.getName(), apps.size(), BaseConstant.VICTORIALOGS_QUERY_WINDOW);
-
+            String title = "🚨 Cảnh báo hệ thống";
             int budget = messageBudget(activeGroup.getType()) - title.length() - 1;
             if (budget <= 0) {
                 log.error("Message limit for channel type [{}] is too small for title [{}], skip creating notification",
@@ -195,22 +193,15 @@ public class VictoriaLogsErrorAlertScheduler {
                 stats.append(", ");
             }
             stats.append("count() if (")
-                    .append(quotePhrase(phrase))
+                    .append(BaseConstant.VICTORIALOGS_QUERY_MESSAGE_FIELD)
+                    .append(":")
+                    .append(phrase.trim())
                     .append(") as \"")
                     .append(statsAlias(notificationQuery))
                     .append("\"");
         }
         return String.format("_time:%s | stats by (%s) %s",
                 BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
-    }
-
-    /**
-     * Renders the configured text as a LogsQL quoted phrase filter on the default field.
-     * Without the quotes a multi-word phrase is parsed as separate word filters, and words
-     * such as `not`, `and`, `or` are read as operators instead of literal text.
-     */
-    private String quotePhrase(String phrase) {
-        return "\"" + phrase.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 
     private String statsAlias(NotificationQuery notificationQuery) {
