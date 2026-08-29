@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 @Schema
 public class NotificationQueryDto extends ABasicAdminDto {
+    @Schema(name = "name")
+    private String name;
     @Schema(name = "query")
     private String query;
     @Schema(name = "count")

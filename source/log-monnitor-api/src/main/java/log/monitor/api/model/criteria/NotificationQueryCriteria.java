@@ -20,6 +20,7 @@ import java.util.List;
 public class NotificationQueryCriteria implements Serializable {
 
     private Long id;
+    private String name;
     private Integer count;
     private Long notificationGroupId;
     private Integer status;
@@ -34,6 +35,10 @@ public class NotificationQueryCriteria implements Serializable {
                 List<Predicate> predicates = new ArrayList<>();
                 if (getId() != null) {
                     predicates.add(cb.equal(root.get("id"), getId()));
+                }
+
+                if (getName() != null && !getName().isEmpty()) {
+                    predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 
                 if (getCount() != null) {

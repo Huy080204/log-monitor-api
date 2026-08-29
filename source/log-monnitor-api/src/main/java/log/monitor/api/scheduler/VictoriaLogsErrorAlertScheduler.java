@@ -94,7 +94,7 @@ public class VictoriaLogsErrorAlertScheduler {
         }
     }
 
-    /** Append each app block while it still fits the budget, otherwise start a new message. */
+    // Pack app chunks into messages, starting a new message once the limit is hit
     private List<String> packBodies(List<String> apps, Map<String, List<String>> breachLinesByApp, int budget) {
         List<String> bodies = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -116,7 +116,7 @@ public class VictoriaLogsErrorAlertScheduler {
         return bodies;
     }
 
-    /** Render one app block, cut into several chunks only if the block alone exceeds the budget. */
+    // Split one app's breach lines into chunks only if they alone exceed the limit
     private List<String> buildAppChunks(String app, List<String> breachLines, int budget) {
         String header = String.format("*%s*", app);
         int headerLength = header.length();
@@ -135,7 +135,7 @@ public class VictoriaLogsErrorAlertScheduler {
         return chunks;
     }
 
-    /** Max message length the target channel accepts. */
+    // Max characters allowed per channel
     private int messageBudget(Integer channelType) {
         return Objects.equals(channelType, BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM)
                 ? BaseConstant.NOTIFICATION_MESSAGE_MAX_LENGTH_TELEGRAM
@@ -150,11 +150,7 @@ public class VictoriaLogsErrorAlertScheduler {
                 : value.substring(0, maxLength - ELLIPSIS.length()) + ELLIPSIS;
     }
 
-    /**
-     * Runs one LogsQL request grouped by application, with a conditional count per
-     * NotificationQuery (`count() if (<filter>) as "<id>"`), then keeps only the
-     * (app, query) pairs whose count reached that query's own threshold.
-     */
+    // Run the query, then keep only (app, query) pairs whose count reached that query's threshold
     private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) throws Exception {
         log.info("Querying VictoriaLogs for breaches with query [{}]", query);
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
@@ -181,6 +177,7 @@ public class VictoriaLogsErrorAlertScheduler {
         return breachLinesByApp;
     }
 
+    // Build LogsQL: time window + group by app + one conditional count("count() if (_msg:<phrase>) as "<id>"") per query
     private String buildQuery(List<NotificationQuery> notificationQueries) {
         StringBuilder stats = new StringBuilder();
         for (NotificationQuery notificationQuery : notificationQueries) {

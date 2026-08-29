@@ -14,6 +14,8 @@ public interface NotificationQueryRepository extends JpaRepository<NotificationQ
 
     boolean existsByQueryAndNotificationGroupId(String query, Long notificationGroupId);
 
+    boolean existsByNameAndNotificationGroupId(String name, Long notificationGroupId);
+
     List<NotificationQuery> findAllByNotificationGroupIdAndStatus(Long notificationGroupId, Integer status);
 
     @Modifying
