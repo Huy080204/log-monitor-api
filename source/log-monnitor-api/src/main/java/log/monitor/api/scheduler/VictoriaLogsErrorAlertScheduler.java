@@ -158,6 +158,7 @@ public class VictoriaLogsErrorAlertScheduler {
      * (app, query) pairs whose count reached that query's own threshold.
      */
     private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) throws Exception {
+        log.info("Querying VictoriaLogs for breaches with query [{}]", query);
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         String rawBody = feignVictoriaLogsService.query(FeignConst.LOGIN_TYPE_NO_AUTH, query);
         if (rawBody == null || rawBody.trim().isEmpty()) {
@@ -185,17 +186,31 @@ public class VictoriaLogsErrorAlertScheduler {
     private String buildQuery(List<NotificationQuery> notificationQueries) {
         StringBuilder stats = new StringBuilder();
         for (NotificationQuery notificationQuery : notificationQueries) {
+            String phrase = notificationQuery.getQuery();
+            if (phrase == null || phrase.trim().isEmpty()) {
+                log.warn("NotificationQuery [{}] has a blank query, skip it", notificationQuery.getId());
+                continue;
+            }
             if (stats.length() > 0) {
                 stats.append(", ");
             }
             stats.append("count() if (")
-                    .append(notificationQuery.getQuery())
+                    .append(quotePhrase(phrase))
                     .append(") as \"")
                     .append(statsAlias(notificationQuery))
                     .append("\"");
         }
         return String.format("_time:%s | stats by (%s) %s",
                 BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
+    }
+
+    /**
+     * Renders the configured text as a LogsQL quoted phrase filter on the default field.
+     * Without the quotes a multi-word phrase is parsed as separate word filters, and words
+     * such as `not`, `and`, `or` are read as operators instead of literal text.
+     */
+    private String quotePhrase(String phrase) {
+        return "\"" + phrase.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 
     private String statsAlias(NotificationQuery notificationQuery) {
