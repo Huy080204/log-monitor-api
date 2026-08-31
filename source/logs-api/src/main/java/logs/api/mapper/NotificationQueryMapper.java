@@ -45,6 +45,7 @@ public interface NotificationQueryMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
+    @Mapping(source = "status", target = "status")
     @BeanMapping(ignoreByDefault = true)
     @Named("updateEntityFromForm")
     void updateEntityFromForm(UpdateNotificationQueryForm updateNotificationQueryForm, @MappingTarget NotificationQuery notificationQuery);
