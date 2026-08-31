@@ -170,7 +170,7 @@ public class VictoriaLogsErrorAlertScheduler {
                 int count = value == null || value.isEmpty() ? 0 : Integer.parseInt(value);
                 if (count >= notificationQuery.getCount()) {
                     breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
-                            .add(String.format("  • `%s`: %d", notificationQuery.getQuery(), count));
+                            .add(String.format("  • `%s`: %d", notificationQuery.getName(), count));
                 }
             }
         }
