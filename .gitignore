@@ -35,13 +35,13 @@ build/
 .vscode/
 
 ### project ignore ###
-source/log-monnitor-api/application-production.properties
-source/log-monnitor-api/deploy_ec2.sh
-source/log-monnitor-api/execute_jar_on_vm.sh
-source/log-monnitor-api/target
-source/log-monnitor-api/logs
-source/log-monnitor-api/.idea
-source/log-monnitor-api/*.iml
+source/logs-api/application-production.properties
+source/logs-api/deploy_ec2.sh
+source/logs-api/execute_jar_on_vm.sh
+source/logs-api/target
+source/logs-api/logs
+source/logs-api/.idea
+source/logs-api/*.iml
 
 ### Vibe Setting ###
 .claude

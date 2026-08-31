@@ -7,10 +7,10 @@ APP_BOOT_TIME_SECOND = 30
 SLACK_CHANNEL_NAME = "C0BML3ZENPK"
 
 TARTGET_FOLDER_DEPLOY="/opt/deploy/logmonitors/api"
-JAR_NAME = "log-monnitor-api-0.0.1.jar"
+JAR_NAME = "logs-api-0.0.1.jar"
 
 
-APP_NAME = "log-monnitor-api"
+APP_NAME = "logs-api"
 LOG_PATH="/var/log/logmonitors/api"
 
 PORT_DEV=1002
@@ -68,7 +68,7 @@ def buildDev(){
                     # so `checkout scm` never removes them. Without this `cp -r` would only overwrite and add,
                     # leaving files deleted from the repo behind and breaking the compile.
                     rm -rf dev-ops/src dev-ops/pom.xml dev-ops/target
-                    cp -r source/log-monnitor-api/* dev-ops/
+                    cp -r source/logs-api/* dev-ops/
                     cd dev-ops
                     cp config/* src/main/resources/
                     mvn clean package -Dmaven.test.skip
