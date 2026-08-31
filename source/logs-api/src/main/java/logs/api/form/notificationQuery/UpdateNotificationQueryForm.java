@@ -3,6 +3,7 @@ package logs.api.form.notificationQuery;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
+import logs.api.validation.NotificationQueryStatus;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
@@ -27,4 +28,9 @@ public class UpdateNotificationQueryForm {
     @NotNull(message = "count cannot be null")
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
+
+    @NotNull(message = "status cannot be null")
+    @NotificationQueryStatus
+    @Schema(name = "status", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer status;
 }
