@@ -4,7 +4,6 @@ import logs.api.constant.BaseConstant;
 import logs.api.dto.ApiMessageDto;
 import logs.api.dto.ErrorCode;
 import logs.api.dto.ResponseListDto;
-import logs.api.dto.queryTemplate.QueryTemplateAutoCompleteDto;
 import logs.api.dto.queryTemplate.QueryTemplateDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
@@ -112,12 +111,12 @@ class QueryTemplateControllerTest {
         QueryTemplate entity = new QueryTemplate();
         List<QueryTemplate> entityList = Collections.singletonList(entity);
         Page<QueryTemplate> page = new PageImpl<>(entityList, pageable, 1);
-        QueryTemplateAutoCompleteDto dto = new QueryTemplateAutoCompleteDto();
-        List<QueryTemplateAutoCompleteDto> dtoList = Collections.singletonList(dto);
+        QueryTemplateDto dto = new QueryTemplateDto();
+        List<QueryTemplateDto> dtoList = Collections.singletonList(dto);
         when(queryTemplateRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(queryTemplateMapper.fromEntityListToQueryTemplateAutoCompleteDto(entityList)).thenReturn(dtoList);
 
-        ApiMessageDto<ResponseListDto<List<QueryTemplateAutoCompleteDto>>> result = controller.autoComplete(criteria, pageable);
+        ApiMessageDto<ResponseListDto<List<QueryTemplateDto>>> result = controller.autoComplete(criteria, pageable);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData().getContent()).isSameAs(dtoList);
@@ -131,8 +130,8 @@ class QueryTemplateControllerTest {
         QueryTemplate entity = new QueryTemplate();
         List<QueryTemplate> entityList = Collections.singletonList(entity);
         Page<QueryTemplate> page = new PageImpl<>(entityList, pageable, 1);
-        QueryTemplateAutoCompleteDto dto = new QueryTemplateAutoCompleteDto();
-        List<QueryTemplateAutoCompleteDto> dtoList = Collections.singletonList(dto);
+        QueryTemplateDto dto = new QueryTemplateDto();
+        List<QueryTemplateDto> dtoList = Collections.singletonList(dto);
         when(queryTemplateRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(queryTemplateMapper.fromEntityListToQueryTemplateAutoCompleteDto(entityList)).thenReturn(dtoList);
 

@@ -97,8 +97,8 @@ public class NotificationQueryController extends ABasicController {
         QueryTemplate queryTemplate = queryTemplateRepository.findById(updateNotificationQueryForm.getQueryTemplateId())
                 .orElseThrow(() -> new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
-        boolean queryTemplateChanged = !Objects.equals(notificationQuery.getQueryTemplate().getId(), queryTemplate.getId());
-        if (queryTemplateChanged && notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(notificationQuery.getNotificationGroup().getId(), queryTemplate.getId())) {
+        if (!Objects.equals(notificationQuery.getQueryTemplate().getId(), queryTemplate.getId())
+                && notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(notificationQuery.getNotificationGroup().getId(), queryTemplate.getId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 

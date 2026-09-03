@@ -1,6 +1,5 @@
 package logs.api.mapper;
 
-import logs.api.dto.queryTemplate.QueryTemplateAutoCompleteDto;
 import logs.api.dto.queryTemplate.QueryTemplateDto;
 import logs.api.form.queryTemplate.CreateQueryTemplateForm;
 import logs.api.form.queryTemplate.UpdateQueryTemplateForm;
@@ -59,8 +58,8 @@ public interface QueryTemplateMapper {
     @Mapping(source = "name", target = "name")
     @BeanMapping(ignoreByDefault = true)
     @Named("autoCompleteMapping")
-    QueryTemplateAutoCompleteDto fromEntityToQueryTemplateAutoCompleteDto(QueryTemplate queryTemplate);
+    QueryTemplateDto fromEntityToQueryTemplateAutoCompleteDto(QueryTemplate queryTemplate);
 
-    @IterableMapping(elementTargetType = QueryTemplateAutoCompleteDto.class, qualifiedByName = "autoCompleteMapping")
-    List<QueryTemplateAutoCompleteDto> fromEntityListToQueryTemplateAutoCompleteDto(List<QueryTemplate> queryTemplates);
+    @IterableMapping(elementTargetType = QueryTemplateDto.class, qualifiedByName = "autoCompleteMapping")
+    List<QueryTemplateDto> fromEntityListToQueryTemplateAutoCompleteDto(List<QueryTemplate> queryTemplates);
 }

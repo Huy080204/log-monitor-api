@@ -4,7 +4,6 @@ import logs.api.constant.BaseConstant;
 import logs.api.dto.ApiMessageDto;
 import logs.api.dto.ErrorCode;
 import logs.api.dto.ResponseListDto;
-import logs.api.dto.queryTemplate.QueryTemplateAutoCompleteDto;
 import logs.api.dto.queryTemplate.QueryTemplateDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
@@ -76,10 +75,10 @@ public class QueryTemplateController extends ABasicController {
     }
 
     @GetMapping(value = "/auto-complete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiMessageDto<ResponseListDto<List<QueryTemplateAutoCompleteDto>>> autoComplete(QueryTemplateCriteria queryTemplateCriteria, Pageable pageable) {
+    public ApiMessageDto<ResponseListDto<List<QueryTemplateDto>>> autoComplete(QueryTemplateCriteria queryTemplateCriteria, Pageable pageable) {
         queryTemplateCriteria.setStatus(BaseConstant.STATUS_ACTIVE);
         Page<QueryTemplate> page = queryTemplateRepository.findAll(queryTemplateCriteria.getCriteria(), pageable);
-        ResponseListDto<List<QueryTemplateAutoCompleteDto>> responseListDto =
+        ResponseListDto<List<QueryTemplateDto>> responseListDto =
                 makeResponseListDto(page, queryTemplateMapper::fromEntityListToQueryTemplateAutoCompleteDto);
         return makeSuccessResponse(responseListDto, "Get auto complete query templates success");
     }
