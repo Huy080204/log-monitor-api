@@ -43,6 +43,12 @@ public class ErrorCode {
     public static final String NOTIFICATION_QUERY_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-QUERY-0002";
 
     /**
+     * Starting error code Applications
+     */
+    public static final String APPLICATIONS_ERROR_NOT_FOUND = "ERROR-APPLICATIONS-0000";
+    public static final String APPLICATIONS_ERROR_NAME_EXISTED = "ERROR-APPLICATIONS-0001";
+
+    /**
      * Starting error code DATABASE_ERROR
      */
     public static final String ERROR_DB_QUERY = "ERROR-DB-QUERY-0000";
