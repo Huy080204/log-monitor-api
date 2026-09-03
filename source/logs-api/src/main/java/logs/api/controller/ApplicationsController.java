@@ -13,6 +13,8 @@ import logs.api.mapper.ApplicationsMapper;
 import logs.api.model.Applications;
 import logs.api.model.criteria.ApplicationsCriteria;
 import logs.api.repository.ApplicationsRepository;
+import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.QueryTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,12 @@ public class ApplicationsController extends ABasicController {
 
     @Autowired
     private ApplicationsMapper applicationsMapper;
+
+    @Autowired
+    private QueryTemplateRepository queryTemplateRepository;
+
+    @Autowired
+    private NotificationQueryRepository notificationQueryRepository;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('APP_V')")
@@ -104,6 +112,8 @@ public class ApplicationsController extends ABasicController {
     public ApiMessageDto<Void> delete(@PathVariable Long id) {
         Applications applications = applicationsRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found applications!", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND));
+        notificationQueryRepository.deleteAllByQueryTemplateApplicationId(id);
+        queryTemplateRepository.deleteAllByApplicationId(id);
         applicationsRepository.delete(applications);
         return makeSuccessResponse("Delete applications success");
     }

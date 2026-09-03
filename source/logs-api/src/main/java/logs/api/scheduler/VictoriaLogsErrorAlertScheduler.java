@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import logs.api.constant.BaseConstant;
+import logs.api.model.Applications;
 import logs.api.model.Notification;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
@@ -168,9 +169,9 @@ public class VictoriaLogsErrorAlertScheduler {
             for (NotificationQuery notificationQuery : notificationQueries) {
                 String value = line.get(statsAlias(notificationQuery));
                 int count = value == null || value.isEmpty() ? 0 : Integer.parseInt(value);
-                if (count >= notificationQuery.getCount()) {
+                if (count >= notificationQuery.getQueryTemplate().getCount()) {
                     breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
-                            .add(String.format("  • `%s`: %d", notificationQuery.getName(), count));
+                            .add(String.format("  • `%s`: %d", notificationQuery.getQueryTemplate().getName(), count));
                 }
             }
         }
@@ -178,10 +179,10 @@ public class VictoriaLogsErrorAlertScheduler {
     }
 
     // Build LogsQL: time window + group by app + one conditional count("count() if (_msg:<phrase>) as "<id>"") per query
-    private String buildQuery(List<NotificationQuery> notificationQueries) {
+    String buildQuery(List<NotificationQuery> notificationQueries) {
         StringBuilder stats = new StringBuilder();
         for (NotificationQuery notificationQuery : notificationQueries) {
-            String phrase = notificationQuery.getQuery();
+            String phrase = notificationQuery.getQueryTemplate().getQuery();
             if (phrase == null || phrase.trim().isEmpty()) {
                 log.warn("NotificationQuery [{}] has a blank query, skip it", notificationQuery.getId());
                 continue;
@@ -192,8 +193,16 @@ public class VictoriaLogsErrorAlertScheduler {
             stats.append("count() if (")
                     .append(BaseConstant.VICTORIALOGS_QUERY_MESSAGE_FIELD)
                     .append(":")
-                    .append(phrase.trim())
-                    .append(") as \"")
+                    .append(phrase.trim());
+            Applications application = notificationQuery.getQueryTemplate().getApplication();
+            if (application != null) {
+                stats.append(" AND ")
+                        .append(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD)
+                        .append(":\"")
+                        .append(application.getName())
+                        .append("\"");
+            }
+            stats.append(") as \"")
                     .append(statsAlias(notificationQuery))
                     .append("\"");
         }

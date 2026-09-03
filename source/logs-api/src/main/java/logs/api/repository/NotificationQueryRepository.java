@@ -12,9 +12,7 @@ import java.util.List;
 
 public interface NotificationQueryRepository extends JpaRepository<NotificationQuery, Long>, JpaSpecificationExecutor<NotificationQuery> {
 
-    boolean existsByQueryAndNotificationGroupId(String query, Long notificationGroupId);
-
-    boolean existsByNameAndNotificationGroupId(String name, Long notificationGroupId);
+    boolean existsByNotificationGroupIdAndQueryTemplateId(Long notificationGroupId, Long queryTemplateId);
 
     List<NotificationQuery> findAllByNotificationGroupIdAndStatus(Long notificationGroupId, Integer status);
 
@@ -22,4 +20,14 @@ public interface NotificationQueryRepository extends JpaRepository<NotificationQ
     @Transactional
     @Query("DELETE FROM NotificationQuery nq WHERE nq.notificationGroup.id = :notificationGroupId")
     void deleteAllByNotificationGroupId(@Param("notificationGroupId") Long notificationGroupId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM NotificationQuery nq WHERE nq.queryTemplate.id = :queryTemplateId")
+    void deleteAllByQueryTemplateId(@Param("queryTemplateId") Long queryTemplateId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM NotificationQuery nq WHERE nq.queryTemplate.id IN (SELECT qt.id FROM QueryTemplate qt WHERE qt.application.id = :applicationId)")
+    void deleteAllByQueryTemplateApplicationId(@Param("applicationId") Long applicationId);
 }

@@ -1,11 +1,11 @@
 package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import logs.api.model.NotificationGroup;
-import logs.api.model.NotificationQuery;
-import logs.api.model.QueryTemplate;
 import lombok.Data;
+import logs.api.model.Applications;
+import logs.api.model.QueryTemplate;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -18,37 +18,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class NotificationQueryCriteria implements Serializable {
+public class QueryTemplateCriteria implements Serializable {
 
     private Long id;
-    private Long notificationGroupId;
-    private Long queryTemplateId;
+    private String name;
     private Integer status;
+    private Long applicationId;
 
     @Schema(hidden = true)
-    public Specification<NotificationQuery> getCriteria() {
-        return new Specification<NotificationQuery>() {
+    public Specification<QueryTemplate> getCriteria() {
+        return new Specification<QueryTemplate>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Predicate toPredicate(Root<NotificationQuery> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+            public Predicate toPredicate(Root<QueryTemplate> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
                 List<Predicate> predicates = new ArrayList<>();
                 if (getId() != null) {
                     predicates.add(cb.equal(root.get("id"), getId()));
                 }
 
-                if (getNotificationGroupId() != null) {
-                    Join<NotificationQuery, NotificationGroup> notificationGroupJoin = root.join("notificationGroup", JoinType.INNER);
-                    predicates.add(cb.equal(notificationGroupJoin.get("id"), getNotificationGroupId()));
-                }
-
-                if (getQueryTemplateId() != null) {
-                    Join<NotificationQuery, QueryTemplate> queryTemplateJoin = root.join("queryTemplate", JoinType.INNER);
-                    predicates.add(cb.equal(queryTemplateJoin.get("id"), getQueryTemplateId()));
+                if (!StringUtils.isEmpty(getName())) {
+                    predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 
                 if (getStatus() != null) {
                     predicates.add(cb.equal(root.get("status"), getStatus()));
+                }
+
+                if (getApplicationId() != null) {
+                    Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.INNER);
+                    predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
                 }
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }

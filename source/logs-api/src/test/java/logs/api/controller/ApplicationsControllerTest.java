@@ -13,9 +13,12 @@ import logs.api.mapper.ApplicationsMapper;
 import logs.api.model.Applications;
 import logs.api.model.criteria.ApplicationsCriteria;
 import logs.api.repository.ApplicationsRepository;
+import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.QueryTemplateRepository;
 import logs.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +48,12 @@ class ApplicationsControllerTest {
 
     @Mock
     private ApplicationsMapper applicationsMapper;
+
+    @Mock
+    private QueryTemplateRepository queryTemplateRepository;
+
+    @Mock
+    private NotificationQueryRepository notificationQueryRepository;
 
     @Mock
     private UserServiceImpl userService;
@@ -144,6 +154,19 @@ class ApplicationsControllerTest {
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Delete applications success");
         verify(applicationsRepository).delete(entity);
+    }
+
+    @Test
+    void shouldCascadeDeleteChildrenInOrderWhenDeletingApplications() {
+        Applications entity = new Applications();
+        when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        controller.delete(1L);
+
+        InOrder inOrder = inOrder(notificationQueryRepository, queryTemplateRepository, applicationsRepository);
+        inOrder.verify(notificationQueryRepository).deleteAllByQueryTemplateApplicationId(1L);
+        inOrder.verify(queryTemplateRepository).deleteAllByApplicationId(1L);
+        inOrder.verify(applicationsRepository).delete(entity);
     }
 
     @Test

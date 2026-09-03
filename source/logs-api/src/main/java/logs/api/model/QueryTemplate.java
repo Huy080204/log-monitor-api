@@ -12,17 +12,18 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = DatabaseConstant.PREFIX_TABLE + "notification_query")
+@Table(name = DatabaseConstant.PREFIX_TABLE + "query_template")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class NotificationQuery extends Auditable<String> {
+public class QueryTemplate extends Auditable<String> {
+    private String name;
+
+    private String query;
+
+    private Integer count;
 
     @ManyToOne
-    @JoinColumn(name = "notification_group_id")
-    private NotificationGroup notificationGroup;
-
-    @ManyToOne
-    @JoinColumn(name = "query_template_id")
-    private QueryTemplate queryTemplate;
+    @JoinColumn(name = "application_id")
+    private Applications application;
 }

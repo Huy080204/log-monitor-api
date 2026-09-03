@@ -11,9 +11,11 @@ import logs.api.form.notificationQuery.UpdateNotificationQueryForm;
 import logs.api.mapper.NotificationQueryMapper;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
+import logs.api.model.QueryTemplate;
 import logs.api.model.criteria.NotificationQueryCriteria;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.QueryTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,9 @@ public class NotificationQueryController extends ABasicController {
     private NotificationGroupRepository notificationGroupRepository;
 
     @Autowired
+    private QueryTemplateRepository queryTemplateRepository;
+
+    @Autowired
     private NotificationQueryMapper notificationQueryMapper;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -68,16 +73,16 @@ public class NotificationQueryController extends ABasicController {
         NotificationGroup notificationGroup = notificationGroupRepository.findById(createNotificationQueryForm.getNotificationGroupId())
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
-        if (notificationQueryRepository.existsByNameAndNotificationGroupId(createNotificationQueryForm.getName(), createNotificationQueryForm.getNotificationGroupId())) {
-            throw new BadRequestException("Notification query name existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_NAME_EXISTED);
-        }
+        QueryTemplate queryTemplate = queryTemplateRepository.findById(createNotificationQueryForm.getQueryTemplateId())
+                .orElseThrow(() -> new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
-        if (notificationQueryRepository.existsByQueryAndNotificationGroupId(createNotificationQueryForm.getQuery(), createNotificationQueryForm.getNotificationGroupId())) {
+        if (notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(createNotificationQueryForm.getNotificationGroupId(), createNotificationQueryForm.getQueryTemplateId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 
-        NotificationQuery notificationQuery = notificationQueryMapper.fromFormToEntity(createNotificationQueryForm);
+        NotificationQuery notificationQuery = new NotificationQuery();
         notificationQuery.setNotificationGroup(notificationGroup);
+        notificationQuery.setQueryTemplate(queryTemplate);
         notificationQueryRepository.save(notificationQuery);
         return makeSuccessResponse(notificationQueryMapper.fromEntityToNotificationQueryIdDto(notificationQuery), "Create notification query success");
     }
@@ -89,17 +94,16 @@ public class NotificationQueryController extends ABasicController {
         NotificationQuery notificationQuery = notificationQueryRepository.findById(updateNotificationQueryForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found notification query", ErrorCode.NOTIFICATION_QUERY_ERROR_NOT_FOUND));
 
-        if (!Objects.equals(notificationQuery.getName(), updateNotificationQueryForm.getName())
-                && notificationQueryRepository.existsByNameAndNotificationGroupId(updateNotificationQueryForm.getName(), notificationQuery.getNotificationGroup().getId())) {
-            throw new BadRequestException("Notification query name existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_NAME_EXISTED);
-        }
+        QueryTemplate queryTemplate = queryTemplateRepository.findById(updateNotificationQueryForm.getQueryTemplateId())
+                .orElseThrow(() -> new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
-        if (!Objects.equals(notificationQuery.getQuery(), updateNotificationQueryForm.getQuery())
-                && notificationQueryRepository.existsByQueryAndNotificationGroupId(updateNotificationQueryForm.getQuery(), notificationQuery.getNotificationGroup().getId())) {
+        boolean queryTemplateChanged = !Objects.equals(notificationQuery.getQueryTemplate().getId(), queryTemplate.getId());
+        if (queryTemplateChanged && notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(notificationQuery.getNotificationGroup().getId(), queryTemplate.getId())) {
             throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
         }
 
         notificationQueryMapper.updateEntityFromForm(updateNotificationQueryForm, notificationQuery);
+        notificationQuery.setQueryTemplate(queryTemplate);
         notificationQueryRepository.save(notificationQuery);
         return makeSuccessResponse("Update notification query success");
     }
