@@ -3,6 +3,7 @@ package logs.api.model.criteria;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import logs.api.model.Applications;
+import logs.api.model.NotificationQuery;
 import logs.api.model.QueryTemplate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,8 @@ public class QueryTemplateCriteria implements Serializable {
     private String name;
     private Integer status;
     private Long applicationId;
+    private Long ignoreNotificationGroupId;
+    private Boolean isGlobal; // null application
 
     @Schema(hidden = true)
     public Specification<QueryTemplate> getCriteria() {
@@ -48,6 +52,18 @@ public class QueryTemplateCriteria implements Serializable {
                 if (getApplicationId() != null) {
                     Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.INNER);
                     predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
+                }
+
+                if (Boolean.TRUE.equals(getIsGlobal())) {
+                    predicates.add(cb.isNull(root.get("application")));
+                }
+
+                if (getIgnoreNotificationGroupId() != null) {
+                    Subquery<Long> ignoreSubquery = query.subquery(Long.class);
+                    Root<NotificationQuery> notificationQueryRoot = ignoreSubquery.from(NotificationQuery.class);
+                    ignoreSubquery.select(notificationQueryRoot.get("queryTemplate").get("id"));
+                    ignoreSubquery.where(cb.equal(notificationQueryRoot.get("notificationGroup").get("id"), getIgnoreNotificationGroupId()));
+                    predicates.add(cb.not(root.get("id").in(ignoreSubquery)));
                 }
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }
