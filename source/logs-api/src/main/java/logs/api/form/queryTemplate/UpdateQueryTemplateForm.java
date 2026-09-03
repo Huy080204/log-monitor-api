@@ -2,6 +2,7 @@ package logs.api.form.queryTemplate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
+import logs.api.validation.NotificationQueryStatus;
 import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
 
@@ -31,4 +32,9 @@ public class UpdateQueryTemplateForm {
     @Schema(name = "applicationId")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     private Long applicationId;
+
+    @NotNull(message = "status cannot be null")
+    @NotificationQueryStatus
+    @Schema(name = "status", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer status;
 }

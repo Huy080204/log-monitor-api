@@ -45,6 +45,7 @@ public interface QueryTemplateMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
+    @Mapping(source = "status", target = "status")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminUpdateMapping")
     void updateEntityFromForm(UpdateQueryTemplateForm updateQueryTemplateForm, @MappingTarget QueryTemplate queryTemplate);
