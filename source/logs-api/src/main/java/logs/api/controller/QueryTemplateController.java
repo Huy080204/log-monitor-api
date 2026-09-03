@@ -93,7 +93,12 @@ public class QueryTemplateController extends ABasicController {
                     .orElseThrow(() -> new NotFoundException("Application not found", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND));
             queryTemplate.setApplication(applications);
         }
-        checkDuplicateName(createQueryTemplateForm.getName(), createQueryTemplateForm.getApplicationId());
+        boolean existed = createQueryTemplateForm.getApplicationId() != null
+                ? queryTemplateRepository.existsByNameAndApplicationId(createQueryTemplateForm.getName(), createQueryTemplateForm.getApplicationId())
+                : queryTemplateRepository.existsByNameAndApplicationIdIsNull(createQueryTemplateForm.getName());
+        if (existed) {
+            throw new BadRequestException("Query template name already exist", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
+        }
 
         queryTemplateRepository.save(queryTemplate);
         return makeSuccessResponse(queryTemplateMapper.fromEntityToQueryTemplateIdDto(queryTemplate), "Create query template success");
@@ -119,7 +124,12 @@ public class QueryTemplateController extends ABasicController {
             queryTemplate.setApplication(null);
         }
         if (nameChanged || applicationChanged) {
-            checkDuplicateName(updateQueryTemplateForm.getName(), updateQueryTemplateForm.getApplicationId());
+            boolean existed = updateQueryTemplateForm.getApplicationId() != null
+                    ? queryTemplateRepository.existsByNameAndApplicationIdAndIdNot(updateQueryTemplateForm.getName(), updateQueryTemplateForm.getApplicationId(), queryTemplate.getId())
+                    : queryTemplateRepository.existsByNameAndApplicationIdIsNullAndIdNot(updateQueryTemplateForm.getName(), queryTemplate.getId());
+            if (existed) {
+                throw new BadRequestException("Query template name already exist", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
+            }
         }
 
         queryTemplateRepository.save(queryTemplate);
@@ -135,14 +145,5 @@ public class QueryTemplateController extends ABasicController {
         notificationQueryRepository.deleteAllByQueryTemplateId(id);
         queryTemplateRepository.delete(queryTemplate);
         return makeSuccessResponse("Delete query template success");
-    }
-
-    private void checkDuplicateName(String name, Long applicationId) {
-        boolean existed = applicationId != null
-                ? queryTemplateRepository.existsByNameAndApplicationId(name, applicationId)
-                : queryTemplateRepository.existsByNameAndApplicationIdIsNull(name);
-        if (existed) {
-            throw new BadRequestException("Query template name already exist", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
-        }
     }
 }

@@ -232,6 +232,7 @@ class QueryTemplateControllerTest {
         form.setName("new-name");
         form.setApplicationId(2L);
         QueryTemplate entity = new QueryTemplate();
+        entity.setId(1L);
         entity.setName("old-name");
         Applications currentApplication = new Applications();
         currentApplication.setId(2L);
@@ -239,7 +240,7 @@ class QueryTemplateControllerTest {
         Applications application = new Applications();
         application.setId(2L);
         when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(queryTemplateRepository.existsByNameAndApplicationId("new-name", 2L)).thenReturn(false);
+        when(queryTemplateRepository.existsByNameAndApplicationIdAndIdNot("new-name", 2L, 1L)).thenReturn(false);
         when(applicationsRepository.findById(2L)).thenReturn(Optional.of(application));
 
         ApiMessageDto<Void> result = controller.update(form, null);
@@ -248,6 +249,46 @@ class QueryTemplateControllerTest {
         assertThat(result.getMessage()).isEqualTo("Update query template success");
         assertThat(entity.getApplication()).isSameAs(application);
         verify(queryTemplateRepository).save(entity);
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenUpdateNameExistedWithApplicationScope() {
+        UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
+        form.setId(1L);
+        form.setName("dup-template");
+        form.setApplicationId(2L);
+        QueryTemplate entity = new QueryTemplate();
+        entity.setId(1L);
+        entity.setName("old-name");
+        Applications currentApplication = new Applications();
+        currentApplication.setId(2L);
+        entity.setApplication(currentApplication);
+        Applications application = new Applications();
+        application.setId(2L);
+        when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(applicationsRepository.findById(2L)).thenReturn(Optional.of(application));
+        when(queryTemplateRepository.existsByNameAndApplicationIdAndIdNot("dup-template", 2L, 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> controller.update(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenUpdateNameExistedWithNullScope() {
+        UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
+        form.setId(1L);
+        form.setName("dup-template");
+        form.setApplicationId(null);
+        QueryTemplate entity = new QueryTemplate();
+        entity.setId(1L);
+        entity.setName("old-name");
+        when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(queryTemplateRepository.existsByNameAndApplicationIdIsNullAndIdNot("dup-template", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> controller.update(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
     }
 
     @Test
@@ -297,6 +338,8 @@ class QueryTemplateControllerTest {
         assertThat(result.getMessage()).isEqualTo("Update query template success");
         verify(queryTemplateRepository, never()).existsByNameAndApplicationId(any(), any());
         verify(queryTemplateRepository, never()).existsByNameAndApplicationIdIsNull(any());
+        verify(queryTemplateRepository, never()).existsByNameAndApplicationIdAndIdNot(any(), any(), any());
+        verify(queryTemplateRepository, never()).existsByNameAndApplicationIdIsNullAndIdNot(any(), any());
         verify(queryTemplateRepository).save(entity);
     }
 

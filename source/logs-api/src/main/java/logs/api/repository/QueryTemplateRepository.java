@@ -13,6 +13,10 @@ public interface QueryTemplateRepository extends JpaRepository<QueryTemplate, Lo
 
     boolean existsByNameAndApplicationIdIsNull(String name);
 
+    boolean existsByNameAndApplicationIdAndIdNot(String name, Long applicationId, Long id);
+
+    boolean existsByNameAndApplicationIdIsNullAndIdNot(String name, Long id);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM QueryTemplate q WHERE q.application.id = :applicationId")
