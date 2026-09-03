@@ -1,0 +1,18 @@
+package logs.api.form.applications;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import javax.validation.constraints.NotBlank;
+
+@Data
+@Schema
+public class CreateApplicationsForm {
+    @NotBlank(message = "name cannot be null")
+    @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String name;
+
+    @NotBlank(message = "description cannot be null")
+    @Schema(name = "description", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String description;
+}
