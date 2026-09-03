@@ -27,7 +27,7 @@ public class QueryTemplateCriteria implements Serializable {
     private Integer status;
     private Long applicationId;
     private Long ignoreNotificationGroupId;
-    private Boolean global;
+    private Boolean isGlobal; // null application
 
     @Schema(hidden = true)
     public Specification<QueryTemplate> getCriteria() {
@@ -54,7 +54,7 @@ public class QueryTemplateCriteria implements Serializable {
                     predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
                 }
 
-                if (Boolean.TRUE.equals(getGlobal())) {
+                if (Boolean.TRUE.equals(getIsGlobal())) {
                     predicates.add(cb.isNull(root.get("application")));
                 }
 
