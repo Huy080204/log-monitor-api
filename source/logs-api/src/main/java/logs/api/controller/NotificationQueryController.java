@@ -28,10 +28,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -90,24 +89,23 @@ public class NotificationQueryController extends ABasicController {
 
             notificationQueryRepository.deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(notificationGroup.getId(), templateQueryIds);
 
-            Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
+            List<NotificationQuery> existingNotificationQueries = notificationQueryRepository.findAllByNotificationGroupId(notificationGroup.getId());
+            Set<Long> existingTemplateIds = new HashSet<>();
+            for (NotificationQuery notificationQuery : existingNotificationQueries) {
+                existingTemplateIds.add(notificationQuery.getQueryTemplate().getId());
+            }
+
+            List<NotificationQuery> notificationQueriesToCreate = new ArrayList<>();
             for (QueryTemplate queryTemplate : queryTemplates) {
-                queryTemplateById.put(queryTemplate.getId(), queryTemplate);
-            }
-
-            List<NotificationQuery> keptNotificationQueries = notificationQueryRepository.findAllByNotificationGroupId(notificationGroup.getId());
-            Set<Long> keptTemplateIds = new HashSet<>();
-            for (NotificationQuery notificationQuery : keptNotificationQueries) {
-                keptTemplateIds.add(notificationQuery.getQueryTemplate().getId());
-            }
-
-            for (Long templateQueryId : templateQueryIds) {
-                if (!keptTemplateIds.contains(templateQueryId)) {
+                if (!existingTemplateIds.contains(queryTemplate.getId())) {
                     NotificationQuery notificationQuery = new NotificationQuery();
                     notificationQuery.setNotificationGroup(notificationGroup);
-                    notificationQuery.setQueryTemplate(queryTemplateById.get(templateQueryId));
-                    notificationQueryRepository.save(notificationQuery);
+                    notificationQuery.setQueryTemplate(queryTemplate);
+                    notificationQueriesToCreate.add(notificationQuery);
                 }
+            }
+            if (!notificationQueriesToCreate.isEmpty()) {
+                notificationQueryRepository.saveAll(notificationQueriesToCreate);
             }
         }
 

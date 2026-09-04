@@ -36,10 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -153,6 +151,7 @@ class NotificationQueryControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void shouldSaveBothRowsWhenGroupHasNoExistingQueries() {
         CreateNotificationQueryForm form = new CreateNotificationQueryForm();
         form.setNotificationGroupId(1L);
@@ -169,9 +168,12 @@ class NotificationQueryControllerTest {
         when(queryTemplateRepository.findAllById(any())).thenReturn(List.of(t10, t20));
         when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of());
 
+        ArgumentCaptor<List<NotificationQuery>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+
         ApiMessageDto<Void> result = controller.create(form, bindingResult);
 
-        verify(notificationQueryRepository, times(2)).save(any(NotificationQuery.class));
+        verify(notificationQueryRepository).saveAll(saveAllCaptor.capture());
+        assertThat(saveAllCaptor.getValue()).hasSize(2);
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isNull();
         assertThat(result.getMessage()).isEqualTo("Create notification query success");
@@ -211,17 +213,20 @@ class NotificationQueryControllerTest {
         when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of(row2, row3));
 
         ArgumentCaptor<Collection<Long>> notInIdsCaptor = ArgumentCaptor.forClass(Collection.class);
-        ArgumentCaptor<NotificationQuery> saveCaptor = ArgumentCaptor.forClass(NotificationQuery.class);
+        ArgumentCaptor<List<NotificationQuery>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
 
         controller.create(form, bindingResult);
 
         verify(notificationQueryRepository).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(eq(1L), notInIdsCaptor.capture());
         assertThat(notInIdsCaptor.getValue()).containsExactlyInAnyOrder(2L, 3L, 4L);
-        verify(notificationQueryRepository, times(1)).save(saveCaptor.capture());
-        assertThat(saveCaptor.getValue().getQueryTemplate()).isSameAs(t4);
-        assertThat(saveCaptor.getValue().getNotificationGroup()).isSameAs(group);
-        verify(notificationQueryRepository, never()).save(same(row2));
-        verify(notificationQueryRepository, never()).save(same(row3));
+        verify(notificationQueryRepository).saveAll(saveAllCaptor.capture());
+        assertThat(saveAllCaptor.getValue()).hasSize(1);
+        assertThat(saveAllCaptor.getValue().get(0).getQueryTemplate()).isSameAs(t4);
+        assertThat(saveAllCaptor.getValue().get(0).getNotificationGroup()).isSameAs(group);
+        // NotificationQuery inherits ReuseId's Lombok @Data equals() (compares only the
+        // always-null `reusedId`), so an equals()-based contains/doesNotContain would be a
+        // false positive here — assert by reference instead.
+        assertThat(saveAllCaptor.getValue()).noneMatch(nq -> nq == row2 || nq == row3);
         // status untouched — sync never re-saves a retained row, so PENDING must not be reset.
         assertThat(row2.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
     }
