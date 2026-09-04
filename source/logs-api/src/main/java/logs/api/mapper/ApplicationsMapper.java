@@ -14,6 +14,7 @@ public interface ApplicationsMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "victoriaAppId", target = "victoriaAppId")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "modifiedDate", target = "modifiedDate")
     @Mapping(source = "createdDate", target = "createdDate")
@@ -26,12 +27,14 @@ public interface ApplicationsMapper {
     List<ApplicationsDto> fromEntityToApplicationsDtoList(List<Applications> applicationsList);
 
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "victoriaAppId", target = "victoriaAppId")
     @Mapping(source = "description", target = "description")
     @BeanMapping(ignoreByDefault = true)
     @Named("createMapping")
     Applications fromFormToEntity(CreateApplicationsForm createApplicationsForm);
 
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "victoriaAppId", target = "victoriaAppId")
     @Mapping(source = "description", target = "description")
     @BeanMapping(ignoreByDefault = true)
     @Named("updateMapping")

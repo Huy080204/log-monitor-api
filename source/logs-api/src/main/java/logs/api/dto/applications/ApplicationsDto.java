@@ -10,6 +10,9 @@ public class ApplicationsDto extends ABasicAdminDto {
     @Schema(name = "name")
     private String name;
 
+    @Schema(name = "victoriaAppId")
+    private String victoriaAppId;
+
     @Schema(name = "description")
     private String description;
 }
