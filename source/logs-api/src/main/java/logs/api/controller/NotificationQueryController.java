@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/notification-query")
@@ -89,11 +90,9 @@ public class NotificationQueryController extends ABasicController {
 
             notificationQueryRepository.deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(notificationGroup.getId(), templateQueryIds);
 
-            List<NotificationQuery> existingNotificationQueries = notificationQueryRepository.findAllByNotificationGroupId(notificationGroup.getId());
-            Set<Long> existingTemplateIds = new HashSet<>();
-            for (NotificationQuery notificationQuery : existingNotificationQueries) {
-                existingTemplateIds.add(notificationQuery.getQueryTemplate().getId());
-            }
+            Set<Long> existingTemplateIds = notificationQueryRepository.findAllByNotificationGroupId(notificationGroup.getId()).stream()
+                    .map(nq -> nq.getQueryTemplate().getId())
+                    .collect(Collectors.toSet());
 
             List<NotificationQuery> notificationQueriesToCreate = new ArrayList<>();
             for (QueryTemplate queryTemplate : queryTemplates) {
