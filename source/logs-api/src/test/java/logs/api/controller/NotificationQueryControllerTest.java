@@ -103,7 +103,7 @@ class NotificationQueryControllerTest {
     }
 
     @Test
-    void shouldAlwaysUseApplicationNameNullsFirstSortWhenListCalled() {
+    void shouldAlwaysUseApplicationNameNullsLastSortWhenListCalled() {
         NotificationQuery entity = new NotificationQuery();
         NotificationQueryDto dto = new NotificationQueryDto();
         Page<NotificationQuery> page = new PageImpl<>(List.of(entity));
@@ -114,7 +114,7 @@ class NotificationQueryControllerTest {
         controller.list(new NotificationQueryCriteria(), PageRequest.of(0, 10));
 
         assertThat(pageableCaptor.getValue().getSort())
-                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsFirst()));
+                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsLast()));
     }
 
     @Test
@@ -133,7 +133,7 @@ class NotificationQueryControllerTest {
         assertThat(actual.getPageNumber()).isEqualTo(1);
         assertThat(actual.getPageSize()).isEqualTo(5);
         assertThat(actual.getSort())
-                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsFirst()));
+                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsLast()));
     }
 
     private static NotificationQueryLinkForm link(Long queryTemplateId, Long applicationId) {

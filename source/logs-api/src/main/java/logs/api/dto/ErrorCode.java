@@ -46,6 +46,7 @@ public class ErrorCode {
      */
     public static final String APPLICATIONS_ERROR_NOT_FOUND = "ERROR-APPLICATIONS-0000";
     public static final String APPLICATIONS_ERROR_NAME_EXISTED = "ERROR-APPLICATIONS-0001";
+    public static final String APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED = "ERROR-APPLICATIONS-0002";
 
     /**
      * Starting error code QueryTemplate

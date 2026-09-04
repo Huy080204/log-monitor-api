@@ -35,8 +35,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -119,6 +121,57 @@ class ApplicationsControllerTest {
         assertThatThrownBy(() -> controller.update(form, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasFieldOrPropertyWithValue("code", ErrorCode.APPLICATIONS_ERROR_NAME_EXISTED);
+    }
+
+    @Test
+    void shouldThrowDuplicateVictoriaAppIdWhenCreateWithExisting() {
+        CreateApplicationsForm form = new CreateApplicationsForm();
+        form.setName("logs-api");
+        form.setVictoriaAppId("app-1");
+        form.setDescription("logs api service");
+        when(applicationsRepository.existsByName("logs-api")).thenReturn(false);
+        when(applicationsRepository.existsByVictoriaAppId("app-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> controller.create(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED);
+    }
+
+    @Test
+    void shouldThrowDuplicateVictoriaAppIdWhenUpdateWithCollidingValue() {
+        UpdateApplicationsForm form = new UpdateApplicationsForm();
+        form.setId(1L);
+        form.setName("logs-api");
+        form.setVictoriaAppId("app-2");
+        form.setDescription("desc");
+        Applications entity = new Applications();
+        entity.setName("logs-api");
+        entity.setVictoriaAppId("app-1");
+        when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(applicationsRepository.existsByVictoriaAppId("app-2")).thenReturn(true);
+
+        assertThatThrownBy(() -> controller.update(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED);
+    }
+
+    @Test
+    void shouldAllowUpdateWhenVictoriaAppIdUnchanged() {
+        UpdateApplicationsForm form = new UpdateApplicationsForm();
+        form.setId(1L);
+        form.setName("logs-api");
+        form.setVictoriaAppId("app-1");
+        form.setDescription("desc");
+        Applications entity = new Applications();
+        entity.setName("logs-api");
+        entity.setVictoriaAppId("app-1");
+        when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        ApiMessageDto<Void> result = controller.update(form, null);
+
+        assertThat(result.getResult()).isTrue();
+        verify(applicationsRepository, never()).existsByVictoriaAppId(anyString());
+        verify(applicationsRepository).save(entity);
     }
 
     @Test
