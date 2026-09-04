@@ -28,9 +28,4 @@ public class UpdateQueryTemplateForm {
     @NotNull(message = "count cannot be null")
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
-
-    @NotNull(message = "status cannot be null")
-    @NotificationQueryStatus
-    @Schema(name = "status", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer status;
 }
