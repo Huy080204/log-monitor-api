@@ -25,4 +25,8 @@ public class NotificationQuery extends Auditable<String> {
     @ManyToOne
     @JoinColumn(name = "query_template_id")
     private QueryTemplate queryTemplate;
+
+    @ManyToOne
+    @JoinColumn(name = "application_id")
+    private Applications application;
 }

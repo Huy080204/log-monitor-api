@@ -1,6 +1,7 @@
 package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import logs.api.model.Applications;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
 import logs.api.model.QueryTemplate;
@@ -23,6 +24,7 @@ public class NotificationQueryCriteria implements Serializable {
     private Long id;
     private Long notificationGroupId;
     private Long queryTemplateId;
+    private Long applicationId;
     private Integer status;
 
     @Schema(hidden = true)
@@ -45,6 +47,11 @@ public class NotificationQueryCriteria implements Serializable {
                 if (getQueryTemplateId() != null) {
                     Join<NotificationQuery, QueryTemplate> queryTemplateJoin = root.join("queryTemplate", JoinType.INNER);
                     predicates.add(cb.equal(queryTemplateJoin.get("id"), getQueryTemplateId()));
+                }
+
+                if (getApplicationId() != null) {
+                    Join<NotificationQuery, Applications> applicationJoin = root.join("application", JoinType.INNER);
+                    predicates.add(cb.equal(applicationJoin.get("id"), getApplicationId()));
                 }
 
                 if (getStatus() != null) {

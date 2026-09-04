@@ -39,6 +39,7 @@ public class ErrorCode {
      * Starting error code NotificationQuery
      */
     public static final String NOTIFICATION_QUERY_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-QUERY-0000";
+    public static final String NOTIFICATION_QUERY_ERROR_APPLICATION_MISMATCH = "ERROR-NOTIFICATION-QUERY-0001";
 
     /**
      * Starting error code Applications

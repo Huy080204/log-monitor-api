@@ -14,12 +14,13 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        uses = {NotificationGroupMapper.class, QueryTemplateMapper.class})
+        uses = {NotificationGroupMapper.class, QueryTemplateMapper.class, ApplicationsMapper.class})
 public interface NotificationQueryMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "notificationGroup", target = "notificationGroup", qualifiedByName = "fromEntityToNotificationGroupDtoAutoComplete")
     @Mapping(source = "queryTemplate", target = "queryTemplate", qualifiedByName = "fromEntityToQueryTemplateDto")
+    @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationsAutoCompleteDto")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "modifiedDate", target = "modifiedDate")

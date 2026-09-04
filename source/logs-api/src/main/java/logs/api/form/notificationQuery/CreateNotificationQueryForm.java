@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -16,8 +17,8 @@ public class CreateNotificationQueryForm {
     @Schema(name = "notificationGroupId", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long notificationGroupId;
 
-    @NotNull(message = "templateQueryIds cannot be null")
-    @JsonDeserialize(contentUsing = StringToLongDeserializer.class)
-    @Schema(name = "templateQueryIds", requiredMode = Schema.RequiredMode.REQUIRED)
-    private List<Long> templateQueryIds;
+    @NotNull(message = "links cannot be null")
+    @Valid
+    @Schema(name = "links", requiredMode = Schema.RequiredMode.REQUIRED)
+    private List<NotificationQueryLinkForm> links;
 }
