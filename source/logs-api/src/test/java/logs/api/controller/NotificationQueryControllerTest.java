@@ -24,7 +24,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.validation.BindingResult;
 
@@ -93,6 +95,50 @@ class NotificationQueryControllerTest {
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData().getContent()).containsExactly(dto);
+    }
+
+    @Test
+    void shouldUseApplicationNameNullsFirstSortAsDefaultWhenListCalledWithNoSort() {
+        NotificationQuery entity = new NotificationQuery();
+        NotificationQueryDto dto = new NotificationQueryDto();
+        Page<NotificationQuery> page = new PageImpl<>(List.of(entity));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        when(notificationQueryRepository.findAll(any(Specification.class), pageableCaptor.capture())).thenReturn(page);
+        when(notificationQueryMapper.fromEntityListToNotificationQueryDtoList(List.of(entity))).thenReturn(List.of(dto));
+
+        controller.list(new NotificationQueryCriteria(), PageRequest.of(0, 10));
+
+        assertThat(pageableCaptor.getValue().getSort())
+                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsFirst()));
+    }
+
+    @Test
+    void shouldKeepPageableUnpagedWhenListCalledWithUnpagedPageable() {
+        NotificationQuery entity = new NotificationQuery();
+        NotificationQueryDto dto = new NotificationQueryDto();
+        Page<NotificationQuery> page = new PageImpl<>(List.of(entity));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        when(notificationQueryRepository.findAll(any(Specification.class), pageableCaptor.capture())).thenReturn(page);
+        when(notificationQueryMapper.fromEntityListToNotificationQueryDtoList(List.of(entity))).thenReturn(List.of(dto));
+
+        controller.list(new NotificationQueryCriteria(), Pageable.unpaged());
+
+        assertThat(pageableCaptor.getValue()).isEqualTo(Pageable.unpaged());
+    }
+
+    @Test
+    void shouldKeepExplicitSortWhenListCalledWithSortParam() {
+        NotificationQuery entity = new NotificationQuery();
+        NotificationQueryDto dto = new NotificationQueryDto();
+        Page<NotificationQuery> page = new PageImpl<>(List.of(entity));
+        Pageable requestedPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        when(notificationQueryRepository.findAll(any(Specification.class), pageableCaptor.capture())).thenReturn(page);
+        when(notificationQueryMapper.fromEntityListToNotificationQueryDtoList(List.of(entity))).thenReturn(List.of(dto));
+
+        controller.list(new NotificationQueryCriteria(), requestedPageable);
+
+        assertThat(pageableCaptor.getValue()).isSameAs(requestedPageable);
     }
 
     @Test
