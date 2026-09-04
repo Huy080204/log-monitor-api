@@ -84,6 +84,9 @@ public class ApplicationsController extends ABasicController {
         if (applicationsRepository.existsByName(createApplicationsForm.getName())) {
             throw new BadRequestException("Applications name already exists", ErrorCode.APPLICATIONS_ERROR_NAME_EXISTED);
         }
+        if (applicationsRepository.existsByVictoriaAppId(createApplicationsForm.getVictoriaAppId())) {
+            throw new BadRequestException("Applications victoriaAppId already exists", ErrorCode.APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED);
+        }
 
         Applications applications = applicationsMapper.fromFormToEntity(createApplicationsForm);
         applicationsRepository.save(applications);
@@ -99,6 +102,9 @@ public class ApplicationsController extends ABasicController {
 
         if (!Objects.equals(updateApplicationsForm.getName(), applications.getName()) && applicationsRepository.existsByName(updateApplicationsForm.getName())) {
             throw new BadRequestException("Applications name already exists", ErrorCode.APPLICATIONS_ERROR_NAME_EXISTED);
+        }
+        if (!Objects.equals(updateApplicationsForm.getVictoriaAppId(), applications.getVictoriaAppId()) && applicationsRepository.existsByVictoriaAppId(updateApplicationsForm.getVictoriaAppId())) {
+            throw new BadRequestException("Applications victoriaAppId already exists", ErrorCode.APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED);
         }
 
         applicationsMapper.updateEntityFromForm(updateApplicationsForm, applications);

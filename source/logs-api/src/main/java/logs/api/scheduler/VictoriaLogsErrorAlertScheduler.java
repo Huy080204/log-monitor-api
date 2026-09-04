@@ -178,31 +178,30 @@ public class VictoriaLogsErrorAlertScheduler {
         return breachLinesByApp;
     }
 
-    // Build LogsQL: time window + group by app + one conditional count("count() if (_msg:<phrase>) as "<id>"") per query
+    // Build LogsQL: time window + group by app + one conditional count("count() if (<query> AND application:"<victoriaAppId>") as "<id>"") per query
     String buildQuery(List<NotificationQuery> notificationQueries) {
         StringBuilder stats = new StringBuilder();
         for (NotificationQuery notificationQuery : notificationQueries) {
-            String phrase = notificationQuery.getQueryTemplate().getQuery();
-            if (phrase == null || phrase.trim().isEmpty()) {
+            String query = notificationQuery.getQueryTemplate().getQuery();
+            if (query == null || query.trim().isEmpty()) {
                 log.warn("NotificationQuery [{}] has a blank query, skip it", notificationQuery.getId());
+                continue;
+            }
+            Applications application = notificationQuery.getApplication();
+            if (application == null) {
+                log.warn("NotificationQuery [{}] has no application, skip it", notificationQuery.getId());
                 continue;
             }
             if (stats.length() > 0) {
                 stats.append(", ");
             }
             stats.append("count() if (")
-                    .append(BaseConstant.VICTORIALOGS_QUERY_MESSAGE_FIELD)
-                    .append(":")
-                    .append(phrase.trim());
-            Applications application = notificationQuery.getQueryTemplate().getApplication();
-            if (application != null) {
-                stats.append(" AND ")
-                        .append(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD)
-                        .append(":\"")
-                        .append(application.getName())
-                        .append("\"");
-            }
-            stats.append(") as \"")
+                    .append(query.trim())
+                    .append(" AND ")
+                    .append(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD)
+                    .append(":\"")
+                    .append(application.getVictoriaAppId())
+                    .append("\") as \"")
                     .append(statsAlias(notificationQuery))
                     .append("\"");
         }
