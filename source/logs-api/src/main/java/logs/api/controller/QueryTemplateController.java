@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/v1/query-template")
@@ -111,26 +110,17 @@ public class QueryTemplateController extends ABasicController {
         QueryTemplate queryTemplate = queryTemplateRepository.findById(updateQueryTemplateForm.getId())
                 .orElseThrow(() -> new NotFoundException("Query template not found", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
-        boolean nameChanged = !Objects.equals(queryTemplate.getName(), updateQueryTemplateForm.getName());
         Long currentApplicationId = queryTemplate.getApplication() != null ? queryTemplate.getApplication().getId() : null;
-        boolean applicationChanged = !Objects.equals(currentApplicationId, updateQueryTemplateForm.getApplicationId());
-
-        queryTemplateMapper.updateEntityFromForm(updateQueryTemplateForm, queryTemplate);
-        if (updateQueryTemplateForm.getApplicationId() != null) {
-            Applications applications = applicationsRepository.findById(updateQueryTemplateForm.getApplicationId())
-                    .orElseThrow(() -> new NotFoundException("Application not found", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND));
-            queryTemplate.setApplication(applications);
-        } else {
-            queryTemplate.setApplication(null);
-        }
-        if (nameChanged || applicationChanged) {
-            boolean existed = updateQueryTemplateForm.getApplicationId() != null
-                    ? queryTemplateRepository.existsByNameAndApplicationIdAndIdNot(updateQueryTemplateForm.getName(), updateQueryTemplateForm.getApplicationId(), queryTemplate.getId())
+        if (!queryTemplate.getName().equals(updateQueryTemplateForm.getName())) {
+            boolean existed = currentApplicationId != null
+                    ? queryTemplateRepository.existsByNameAndApplicationIdAndIdNot(updateQueryTemplateForm.getName(), currentApplicationId, queryTemplate.getId())
                     : queryTemplateRepository.existsByNameAndApplicationIdIsNullAndIdNot(updateQueryTemplateForm.getName(), queryTemplate.getId());
             if (existed) {
                 throw new BadRequestException("Query template name already exist", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
             }
         }
+
+        queryTemplateMapper.updateEntityFromForm(updateQueryTemplateForm, queryTemplate);
 
         queryTemplateRepository.save(queryTemplate);
         return makeSuccessResponse("Update query template success");
