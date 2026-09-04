@@ -11,7 +11,7 @@ import java.util.List;
 
 @Data
 @Schema
-public class CreateNotificationQueryForm {
+public class ReplaceNotificationQueryForm {
     @NotNull(message = "notificationGroupId cannot be null")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     @Schema(name = "notificationGroupId", requiredMode = Schema.RequiredMode.REQUIRED)
