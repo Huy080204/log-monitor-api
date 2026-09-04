@@ -1,5 +1,5 @@
 [Unit]
-Description=BBB Api Service 
+Description=LogsMgr Api Service 
 
 [Service]
 #User=root #use user with restricted permissions
