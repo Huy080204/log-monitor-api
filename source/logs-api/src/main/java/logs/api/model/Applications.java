@@ -17,6 +17,7 @@ import javax.persistence.Table;
 @Setter
 public class Applications extends Auditable<String> {
     private String name;
+    private String victoriaAppId;
 
     @Column(columnDefinition = "text")
     private String description;
