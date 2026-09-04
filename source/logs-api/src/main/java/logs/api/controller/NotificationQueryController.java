@@ -63,10 +63,8 @@ public class NotificationQueryController extends ABasicController {
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOQ_L')")
     public ApiMessageDto<ResponseListDto<List<NotificationQueryDto>>> list(NotificationQueryCriteria notificationQueryCriteria, @PageableDefault Pageable pageable) {
-        if (pageable.isPaged() && pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                    Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsFirst()));
-        }
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsFirst()));
         Page<NotificationQuery> page = notificationQueryRepository.findAll(notificationQueryCriteria.getCriteria(), pageable);
         ResponseListDto<List<NotificationQueryDto>> responseListDto =
                 makeResponseListDto(page, notificationQueryMapper::fromEntityListToNotificationQueryDtoList);
