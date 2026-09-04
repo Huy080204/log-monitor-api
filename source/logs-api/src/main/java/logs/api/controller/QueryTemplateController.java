@@ -19,6 +19,7 @@ import logs.api.repository.QueryTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -67,7 +68,9 @@ public class QueryTemplateController extends ABasicController {
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('QTP_L')")
     public ApiMessageDto<ResponseListDto<List<QueryTemplateDto>>> list(QueryTemplateCriteria queryTemplateCriteria, @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<QueryTemplate> page = queryTemplateRepository.findAll(queryTemplateCriteria.getCriteria(), pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(new Sort.Order(Sort.Direction.ASC, "application.name").nullsLast()));
+        Page<QueryTemplate> page = queryTemplateRepository.findAll(queryTemplateCriteria.getCriteria(), sortedPageable);
         ResponseListDto<List<QueryTemplateDto>> responseListDto =
                 makeResponseListDto(page, queryTemplateMapper::fromEntityToQueryTemplateDtoList);
         return makeSuccessResponse(responseListDto, "Get list success");
