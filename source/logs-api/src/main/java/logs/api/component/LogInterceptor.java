@@ -1,6 +1,7 @@
 package logs.api.component;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -22,7 +23,6 @@ public class LogInterceptor implements HandlerInterceptor {
         }
         long startTime = System.currentTimeMillis();
         request.setAttribute("startTime", startTime);
-        log.debug("Starting call url: [{}]", getUrl(request));
         return true;
     }
 
@@ -33,11 +33,18 @@ public class LogInterceptor implements HandlerInterceptor {
         long startTime = (Long) request.getAttribute("startTime");
         long endTime = System.currentTimeMillis();
         long executeTime = endTime - startTime;
-        log.debug("Complete [{}] executeTime : {}ms", getUrl(request), executeTime);
 
-        if (ex != null) {
-            log.error("afterCompletion>> " + ex.getMessage());
-
+        try {
+            MDC.put("request", getUrl(request));
+            MDC.put("executeTime", executeTime + "");
+            if (ex != null) {
+                log.error("afterCompletion>> {}", ex.getMessage());
+            } else {
+                log.debug("[{}], executeTime: {}ms", getUrl(request), executeTime);
+            }
+        } finally {
+            MDC.remove("request");
+            MDC.remove("executeTime");
         }
     }
 

@@ -1,17 +1,17 @@
 #!/bin/bash
-SERVER_DEPLOY=192.168.0.26
-TARGET_DIR=/opt/deploy/bbb-api
-APP_ID=bbb-api
+SERVER_DEPLOY=192.168.0.14
+TARGET_DIR=/opt/deploy/logsmgr/api
+APP_ID=logsmgr-api
 
 echo "Build source..."
-cd ../source/spring-base-universal
+cd ../source/logs-api
 mvn clean package
 cd ../../deploy
 
 echo "Update config..."
 mkdir release
 
-cp ../source/spring-base-universal/target/spring-base-universal-0.0.1.jar release/app.jar
+cp ../source/logs-api/target/logs-api-0.0.1.jar release/app.jar
 
 cp config/* release/
 rm -rf release/logback-spring.xml
@@ -37,7 +37,7 @@ ssh root@$SERVER_DEPLOY "rm -rf /lib/systemd/system/$APP_ID.service"
 # echo " ---> Upload build..."
 scp api.tar.gz root@$SERVER_DEPLOY:$TARGET_DIR/api.tar.gz
 ssh root@$SERVER_DEPLOY "cd $TARGET_DIR && tar -xzf api.tar.gz && rm -rf api.tar.gz && mv release/* . && rm -rf release"
-ssh root@$SERVER_DEPLOY "cd $TARGET_DIR && cp ../cfg/api/cfg.prop application-prod.properties"
+ssh root@$SERVER_DEPLOY "cd $TARGET_DIR && cp ../cfg/api/app.prop application-prod.properties"
 
 echo " ---> Deploy new service..."
 ssh root@$SERVER_DEPLOY "mv $TARGET_DIR/$APP_ID.service /lib/systemd/system/$APP_ID.service"
