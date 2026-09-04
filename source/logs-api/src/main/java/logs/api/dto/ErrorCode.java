@@ -39,9 +39,6 @@ public class ErrorCode {
      * Starting error code NotificationQuery
      */
     public static final String NOTIFICATION_QUERY_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-QUERY-0000";
-    public static final String NOTIFICATION_QUERY_ERROR_EXISTED = "ERROR-NOTIFICATION-QUERY-0001";
-    public static final String NOTIFICATION_QUERY_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-QUERY-0002";
-    public static final String NOTIFICATION_QUERY_ERROR_DUPLICATED = "ERROR-NOTIFICATION-QUERY-0003";
 
     /**
      * Starting error code Applications

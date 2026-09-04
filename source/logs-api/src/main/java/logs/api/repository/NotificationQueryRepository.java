@@ -8,13 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface NotificationQueryRepository extends JpaRepository<NotificationQuery, Long>, JpaSpecificationExecutor<NotificationQuery> {
-
-    boolean existsByNotificationGroupIdAndQueryTemplateId(Long notificationGroupId, Long queryTemplateId);
-
-    boolean existsByNotificationGroupId(Long notificationGroupId);
 
     List<NotificationQuery> findAllByNotificationGroupIdAndStatus(Long notificationGroupId, Integer status);
 
@@ -24,6 +21,11 @@ public interface NotificationQueryRepository extends JpaRepository<NotificationQ
     @Transactional
     @Query("DELETE FROM NotificationQuery nq WHERE nq.notificationGroup.id = :notificationGroupId")
     void deleteAllByNotificationGroupId(@Param("notificationGroupId") Long notificationGroupId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM NotificationQuery nq WHERE nq.notificationGroup.id = :notificationGroupId AND nq.queryTemplate.id NOT IN :queryTemplateIds")
+    void deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(@Param("notificationGroupId") Long notificationGroupId, @Param("queryTemplateIds") Collection<Long> queryTemplateIds);
 
     @Modifying
     @Transactional

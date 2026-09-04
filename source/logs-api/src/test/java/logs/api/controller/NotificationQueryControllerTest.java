@@ -8,7 +8,6 @@ import logs.api.dto.notificationQuery.NotificationQueryDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
 import logs.api.form.notificationQuery.CreateNotificationQueryForm;
-import logs.api.form.notificationQuery.ReplaceNotificationQueryForm;
 import logs.api.mapper.NotificationQueryMapper;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
@@ -29,12 +28,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.validation.BindingResult;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -106,10 +107,14 @@ class NotificationQueryControllerTest {
         assertThatThrownBy(() -> controller.create(form, bindingResult))
                 .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND);
+
+        verify(notificationQueryRepository, never()).save(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupId(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(any(), any());
     }
 
     @Test
-    void shouldThrowNotFoundWhenCreateQueryTemplateIdInListDoesNotExist() {
+    void shouldThrowNotFoundWhenCreateQueryTemplateIdDoesNotExist() {
         CreateNotificationQueryForm form = new CreateNotificationQueryForm();
         form.setNotificationGroupId(1L);
         form.setTemplateQueryIds(List.of(2L, 3L));
@@ -118,12 +123,15 @@ class NotificationQueryControllerTest {
         QueryTemplate t2 = new QueryTemplate();
         t2.setId(2L);
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(queryTemplateRepository.findById(2L)).thenReturn(Optional.of(t2));
-        when(queryTemplateRepository.findById(3L)).thenReturn(Optional.empty());
+        when(queryTemplateRepository.findAllById(any())).thenReturn(List.of(t2));
 
         assertThatThrownBy(() -> controller.create(form, bindingResult))
                 .isInstanceOf(NotFoundException.class)
                 .hasFieldOrPropertyWithValue("code", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND);
+
+        verify(notificationQueryRepository, never()).save(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupId(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(any(), any());
     }
 
     @Test
@@ -137,111 +145,47 @@ class NotificationQueryControllerTest {
 
         assertThatThrownBy(() -> controller.create(form, bindingResult))
                 .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_QUERY_ERROR_DUPLICATED);
+                .hasMessage("Duplicate query template in request");
+
+        verify(notificationQueryRepository, never()).save(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupId(any());
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(any(), any());
     }
 
     @Test
-    void shouldThrowBadRequestWhenCreateNotificationGroupAlreadyConfigured() {
+    void shouldSaveBothRowsWhenGroupHasNoExistingQueries() {
         CreateNotificationQueryForm form = new CreateNotificationQueryForm();
         form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(2L));
+        form.setTemplateQueryIds(List.of(10L, 20L));
+
         NotificationGroup group = new NotificationGroup();
         group.setId(1L);
+        QueryTemplate t10 = new QueryTemplate();
+        t10.setId(10L);
+        QueryTemplate t20 = new QueryTemplate();
+        t20.setId(20L);
+
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(notificationQueryRepository.existsByNotificationGroupId(1L)).thenReturn(true);
-
-        assertThatThrownBy(() -> controller.create(form, bindingResult))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void shouldCreateBulkWhenNotificationGroupNotYetConfigured() {
-        CreateNotificationQueryForm form = new CreateNotificationQueryForm();
-        form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(5L, 6L));
-        NotificationGroup group = new NotificationGroup();
-        group.setId(1L);
-        QueryTemplate t5 = new QueryTemplate();
-        t5.setId(5L);
-        QueryTemplate t6 = new QueryTemplate();
-        t6.setId(6L);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(notificationQueryRepository.existsByNotificationGroupId(1L)).thenReturn(false);
-        when(queryTemplateRepository.findById(5L)).thenReturn(Optional.of(t5));
-        when(queryTemplateRepository.findById(6L)).thenReturn(Optional.of(t6));
-
-        ArgumentCaptor<List<NotificationQuery>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+        when(queryTemplateRepository.findAllById(any())).thenReturn(List.of(t10, t20));
+        when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of());
 
         ApiMessageDto<Void> result = controller.create(form, bindingResult);
 
-        verify(notificationQueryRepository).saveAll(saveAllCaptor.capture());
-        assertThat(saveAllCaptor.getValue()).hasSize(2);
+        verify(notificationQueryRepository, times(2)).save(any(NotificationQuery.class));
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isNull();
         assertThat(result.getMessage()).isEqualTo("Create notification query success");
     }
 
     @Test
-    void shouldThrowNotFoundWhenReplaceNotificationGroupDoesNotExist() {
-        ReplaceNotificationQueryForm form = new ReplaceNotificationQueryForm();
-        form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(2L));
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> controller.replace(form, bindingResult))
-                .isInstanceOf(NotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND);
-
-        verify(notificationQueryRepository, never()).deleteAll(any());
-        verify(notificationQueryRepository, never()).save(any());
-    }
-
-    @Test
-    void shouldThrowNotFoundWhenReplaceQueryTemplateIdDoesNotExist() {
-        ReplaceNotificationQueryForm form = new ReplaceNotificationQueryForm();
-        form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(2L, 3L));
-        NotificationGroup group = new NotificationGroup();
-        group.setId(1L);
-        QueryTemplate t2 = new QueryTemplate();
-        t2.setId(2L);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(queryTemplateRepository.findById(2L)).thenReturn(Optional.of(t2));
-        when(queryTemplateRepository.findById(3L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> controller.replace(form, bindingResult))
-                .isInstanceOf(NotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND);
-    }
-
-    @Test
-    void shouldThrowBadRequestWhenReplaceTemplateQueryIdsHasDuplicate() {
-        ReplaceNotificationQueryForm form = new ReplaceNotificationQueryForm();
-        form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(5L, 5L));
-        NotificationGroup group = new NotificationGroup();
-        group.setId(1L);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-
-        assertThatThrownBy(() -> controller.replace(form, bindingResult))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_QUERY_ERROR_DUPLICATED);
-    }
-
-    @Test
     @SuppressWarnings("unchecked")
-    void shouldReplaceQueriesWhenNotificationGroupExists() {
-        ReplaceNotificationQueryForm form = new ReplaceNotificationQueryForm();
+    void shouldSyncQueriesWhenGroupAlreadyLinkedToOtherTemplates() {
+        CreateNotificationQueryForm form = new CreateNotificationQueryForm();
         form.setNotificationGroupId(1L);
         form.setTemplateQueryIds(List.of(2L, 3L, 4L));
 
         NotificationGroup group = new NotificationGroup();
         group.setId(1L);
-
-        QueryTemplate t1 = new QueryTemplate();
-        t1.setId(1L);
         QueryTemplate t2 = new QueryTemplate();
         t2.setId(2L);
         QueryTemplate t3 = new QueryTemplate();
@@ -249,15 +193,13 @@ class NotificationQueryControllerTest {
         QueryTemplate t4 = new QueryTemplate();
         t4.setId(4L);
 
-        NotificationQuery row1 = new NotificationQuery();
-        row1.setId(101L);
-        row1.setNotificationGroup(group);
-        row1.setQueryTemplate(t1);
-
+        // t1's row is already gone from this read-back — it is the bulk-delete's job to have
+        // removed it; this mock represents the post-delete state, not a pre-delete snapshot.
         NotificationQuery row2 = new NotificationQuery();
         row2.setId(102L);
         row2.setNotificationGroup(group);
         row2.setQueryTemplate(t2);
+        row2.setStatus(BaseConstant.STATUS_PENDING);
 
         NotificationQuery row3 = new NotificationQuery();
         row3.setId(103L);
@@ -265,54 +207,42 @@ class NotificationQueryControllerTest {
         row3.setQueryTemplate(t3);
 
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(queryTemplateRepository.findById(2L)).thenReturn(Optional.of(t2));
-        when(queryTemplateRepository.findById(3L)).thenReturn(Optional.of(t3));
-        when(queryTemplateRepository.findById(4L)).thenReturn(Optional.of(t4));
-        when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of(row1, row2, row3));
+        when(queryTemplateRepository.findAllById(any())).thenReturn(List.of(t2, t3, t4));
+        when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of(row2, row3));
 
-        ArgumentCaptor<List<NotificationQuery>> deleteCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<Collection<Long>> notInIdsCaptor = ArgumentCaptor.forClass(Collection.class);
         ArgumentCaptor<NotificationQuery> saveCaptor = ArgumentCaptor.forClass(NotificationQuery.class);
 
-        ApiMessageDto<Void> result = controller.replace(form, bindingResult);
+        controller.create(form, bindingResult);
 
-        verify(notificationQueryRepository).deleteAll(deleteCaptor.capture());
-        assertThat(deleteCaptor.getValue()).containsExactly(row1);
+        verify(notificationQueryRepository).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(eq(1L), notInIdsCaptor.capture());
+        assertThat(notInIdsCaptor.getValue()).containsExactlyInAnyOrder(2L, 3L, 4L);
         verify(notificationQueryRepository, times(1)).save(saveCaptor.capture());
         assertThat(saveCaptor.getValue().getQueryTemplate()).isSameAs(t4);
         assertThat(saveCaptor.getValue().getNotificationGroup()).isSameAs(group);
         verify(notificationQueryRepository, never()).save(same(row2));
         verify(notificationQueryRepository, never()).save(same(row3));
-        assertThat(result.getResult()).isTrue();
-        assertThat(result.getData()).isNull();
-        assertThat(result.getMessage()).isEqualTo("Replace notification query success");
+        // status untouched — sync never re-saves a retained row, so PENDING must not be reset.
+        assertThat(row2.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
     }
 
     @Test
-    void shouldKeepExistingStatusWhenReplaceRetainsLinkedQuery() {
-        ReplaceNotificationQueryForm form = new ReplaceNotificationQueryForm();
+    void shouldDeleteAllWhenTemplateQueryIdsEmpty() {
+        CreateNotificationQueryForm form = new CreateNotificationQueryForm();
         form.setNotificationGroupId(1L);
-        form.setTemplateQueryIds(List.of(2L));
+        form.setTemplateQueryIds(List.of());
 
         NotificationGroup group = new NotificationGroup();
         group.setId(1L);
-        QueryTemplate t2 = new QueryTemplate();
-        t2.setId(2L);
-
-        NotificationQuery row2 = new NotificationQuery();
-        row2.setId(102L);
-        row2.setNotificationGroup(group);
-        row2.setQueryTemplate(t2);
-        row2.setStatus(BaseConstant.STATUS_PENDING);
-
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
-        when(queryTemplateRepository.findById(2L)).thenReturn(Optional.of(t2));
-        when(notificationQueryRepository.findAllByNotificationGroupId(1L)).thenReturn(List.of(row2));
 
-        controller.replace(form, bindingResult);
+        ApiMessageDto<Void> result = controller.create(form, bindingResult);
 
-        assertThat(row2.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
-        verify(notificationQueryRepository, never()).save(same(row2));
-        verify(notificationQueryRepository, never()).deleteAll(any());
+        verify(notificationQueryRepository).deleteAllByNotificationGroupId(1L);
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(any(), any());
+        verify(notificationQueryRepository, never()).save(any());
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getData()).isNull();
     }
 
     @Test

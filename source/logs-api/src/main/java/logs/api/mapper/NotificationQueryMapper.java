@@ -29,9 +29,4 @@ public interface NotificationQueryMapper {
 
     @IterableMapping(elementTargetType = NotificationQueryDto.class, qualifiedByName = "fromEntityToNotificationQueryDto")
     List<NotificationQueryDto> fromEntityListToNotificationQueryDtoList(List<NotificationQuery> notificationQueries);
-
-    @Mapping(source = "id", target = "id")
-    @BeanMapping(ignoreByDefault = true)
-    @Named("fromEntityToNotificationQueryIdDto")
-    NotificationQueryDto fromEntityToNotificationQueryIdDto(NotificationQuery notificationQuery);
 }
