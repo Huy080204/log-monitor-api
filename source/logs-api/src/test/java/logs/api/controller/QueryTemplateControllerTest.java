@@ -226,28 +226,25 @@ class QueryTemplateControllerTest {
     }
 
     @Test
-    void shouldUpdateQueryTemplateSuccess() {
+    void shouldUpdateQueryTemplateSuccessAndLeaveApplicationUnchanged() {
         UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
         form.setId(1L);
         form.setName("new-name");
-        form.setApplicationId(2L);
         QueryTemplate entity = new QueryTemplate();
         entity.setId(1L);
         entity.setName("old-name");
         Applications currentApplication = new Applications();
         currentApplication.setId(2L);
         entity.setApplication(currentApplication);
-        Applications application = new Applications();
-        application.setId(2L);
         when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(queryTemplateRepository.existsByNameAndApplicationIdAndIdNot("new-name", 2L, 1L)).thenReturn(false);
-        when(applicationsRepository.findById(2L)).thenReturn(Optional.of(application));
 
         ApiMessageDto<Void> result = controller.update(form, null);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Update query template success");
-        assertThat(entity.getApplication()).isSameAs(application);
+        assertThat(entity.getApplication()).isSameAs(currentApplication);
+        verify(applicationsRepository, never()).findById(any());
         verify(queryTemplateRepository).save(entity);
     }
 
@@ -256,17 +253,13 @@ class QueryTemplateControllerTest {
         UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
         form.setId(1L);
         form.setName("dup-template");
-        form.setApplicationId(2L);
         QueryTemplate entity = new QueryTemplate();
         entity.setId(1L);
         entity.setName("old-name");
         Applications currentApplication = new Applications();
         currentApplication.setId(2L);
         entity.setApplication(currentApplication);
-        Applications application = new Applications();
-        application.setId(2L);
         when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.findById(2L)).thenReturn(Optional.of(application));
         when(queryTemplateRepository.existsByNameAndApplicationIdAndIdNot("dup-template", 2L, 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.update(form, null))
@@ -279,7 +272,6 @@ class QueryTemplateControllerTest {
         UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
         form.setId(1L);
         form.setName("dup-template");
-        form.setApplicationId(null);
         QueryTemplate entity = new QueryTemplate();
         entity.setId(1L);
         entity.setName("old-name");
@@ -303,39 +295,23 @@ class QueryTemplateControllerTest {
     }
 
     @Test
-    void shouldThrowNotFoundWhenApplicationNotFoundOnUpdate() {
+    void shouldSkipDuplicateNameCheckWhenUpdateNameUnchanged() {
         UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
         form.setId(1L);
         form.setName("same-name");
-        form.setApplicationId(99L);
-        QueryTemplate entity = new QueryTemplate();
-        entity.setName("same-name");
-        when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> controller.update(form, null))
-                .isInstanceOf(NotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND);
-    }
-
-    @Test
-    void shouldSkipDuplicateNameCheckWhenUpdatePairUnchanged() {
-        UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
-        form.setId(1L);
-        form.setName("same-name");
-        form.setApplicationId(2L);
         QueryTemplate entity = new QueryTemplate();
         entity.setName("same-name");
         Applications currentApplication = new Applications();
         currentApplication.setId(2L);
         entity.setApplication(currentApplication);
         when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.findById(2L)).thenReturn(Optional.of(currentApplication));
 
         ApiMessageDto<Void> result = controller.update(form, null);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Update query template success");
+        assertThat(entity.getApplication()).isSameAs(currentApplication);
+        verify(applicationsRepository, never()).findById(any());
         verify(queryTemplateRepository, never()).existsByNameAndApplicationId(any(), any());
         verify(queryTemplateRepository, never()).existsByNameAndApplicationIdIsNull(any());
         verify(queryTemplateRepository, never()).existsByNameAndApplicationIdAndIdNot(any(), any(), any());

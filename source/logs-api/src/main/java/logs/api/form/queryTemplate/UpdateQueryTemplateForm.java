@@ -29,10 +29,6 @@ public class UpdateQueryTemplateForm {
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
 
-    @Schema(name = "applicationId")
-    @JsonDeserialize(using = StringToLongDeserializer.class)
-    private Long applicationId;
-
     @NotNull(message = "status cannot be null")
     @NotificationQueryStatus
     @Schema(name = "status", requiredMode = Schema.RequiredMode.REQUIRED)
