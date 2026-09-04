@@ -1,13 +1,11 @@
 package logs.api.mapper;
 
 import logs.api.dto.notificationQuery.NotificationQueryDto;
-import logs.api.form.notificationQuery.UpdateNotificationQueryForm;
 import logs.api.model.NotificationQuery;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
@@ -31,14 +29,4 @@ public interface NotificationQueryMapper {
 
     @IterableMapping(elementTargetType = NotificationQueryDto.class, qualifiedByName = "fromEntityToNotificationQueryDto")
     List<NotificationQueryDto> fromEntityListToNotificationQueryDtoList(List<NotificationQuery> notificationQueries);
-
-    @Mapping(source = "status", target = "status")
-    @BeanMapping(ignoreByDefault = true)
-    @Named("updateEntityFromForm")
-    void updateEntityFromForm(UpdateNotificationQueryForm updateNotificationQueryForm, @MappingTarget NotificationQuery notificationQuery);
-
-    @Mapping(source = "id", target = "id")
-    @BeanMapping(ignoreByDefault = true)
-    @Named("fromEntityToNotificationQueryIdDto")
-    NotificationQueryDto fromEntityToNotificationQueryIdDto(NotificationQuery notificationQuery);
 }

@@ -7,7 +7,6 @@ import logs.api.dto.notificationQuery.NotificationQueryDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
 import logs.api.form.notificationQuery.CreateNotificationQueryForm;
-import logs.api.form.notificationQuery.UpdateNotificationQueryForm;
 import logs.api.mapper.NotificationQueryMapper;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
@@ -29,8 +28,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/notification-query")
@@ -69,43 +71,44 @@ public class NotificationQueryController extends ABasicController {
     @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOQ_C')")
     @Transactional
-    public ApiMessageDto<NotificationQueryDto> create(@Valid @RequestBody CreateNotificationQueryForm createNotificationQueryForm, BindingResult bindingResult) {
+    public ApiMessageDto<Void> create(@Valid @RequestBody CreateNotificationQueryForm createNotificationQueryForm, BindingResult bindingResult) {
         NotificationGroup notificationGroup = notificationGroupRepository.findById(createNotificationQueryForm.getNotificationGroupId())
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
-        QueryTemplate queryTemplate = queryTemplateRepository.findById(createNotificationQueryForm.getQueryTemplateId())
-                .orElseThrow(() -> new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
-
-        if (notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(createNotificationQueryForm.getNotificationGroupId(), createNotificationQueryForm.getQueryTemplateId())) {
-            throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
+        List<Long> templateQueryIds = createNotificationQueryForm.getTemplateQueryIds();
+        if (new HashSet<>(templateQueryIds).size() != templateQueryIds.size()) {
+            throw new BadRequestException("Duplicate query template in request");
         }
 
-        NotificationQuery notificationQuery = new NotificationQuery();
-        notificationQuery.setNotificationGroup(notificationGroup);
-        notificationQuery.setQueryTemplate(queryTemplate);
-        notificationQueryRepository.save(notificationQuery);
-        return makeSuccessResponse(notificationQueryMapper.fromEntityToNotificationQueryIdDto(notificationQuery), "Create notification query success");
-    }
+        if (templateQueryIds.isEmpty()) {
+            notificationQueryRepository.deleteAllByNotificationGroupId(notificationGroup.getId());
+        } else {
+            List<QueryTemplate> queryTemplates = queryTemplateRepository.findAllById(templateQueryIds);
+            if (queryTemplates.size() != templateQueryIds.size()) {
+                throw new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND);
+            }
 
-    @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('NOQ_U')")
-    @Transactional
-    public ApiMessageDto<Void> update(@Valid @RequestBody UpdateNotificationQueryForm updateNotificationQueryForm, BindingResult bindingResult) {
-        NotificationQuery notificationQuery = notificationQueryRepository.findById(updateNotificationQueryForm.getId())
-                .orElseThrow(() -> new NotFoundException("Not found notification query", ErrorCode.NOTIFICATION_QUERY_ERROR_NOT_FOUND));
+            notificationQueryRepository.deleteAllByNotificationGroupIdAndQueryTemplateIdNotIn(notificationGroup.getId(), templateQueryIds);
 
-        QueryTemplate queryTemplate = queryTemplateRepository.findById(updateNotificationQueryForm.getQueryTemplateId())
-                .orElseThrow(() -> new NotFoundException("Not found query template", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
+            Set<Long> existingTemplateIds = notificationQueryRepository.findAllByNotificationGroupId(notificationGroup.getId()).stream()
+                    .map(nq -> nq.getQueryTemplate().getId())
+                    .collect(Collectors.toSet());
 
-        if (!Objects.equals(notificationQuery.getQueryTemplate().getId(), queryTemplate.getId())
-                && notificationQueryRepository.existsByNotificationGroupIdAndQueryTemplateId(notificationQuery.getNotificationGroup().getId(), queryTemplate.getId())) {
-            throw new BadRequestException("Notification query existed for this group", ErrorCode.NOTIFICATION_QUERY_ERROR_EXISTED);
+            List<NotificationQuery> notificationQueriesToCreate = new ArrayList<>();
+            for (QueryTemplate queryTemplate : queryTemplates) {
+                if (!existingTemplateIds.contains(queryTemplate.getId())) {
+                    NotificationQuery notificationQuery = new NotificationQuery();
+                    notificationQuery.setNotificationGroup(notificationGroup);
+                    notificationQuery.setQueryTemplate(queryTemplate);
+                    notificationQueriesToCreate.add(notificationQuery);
+                }
+            }
+            if (!notificationQueriesToCreate.isEmpty()) {
+                notificationQueryRepository.saveAll(notificationQueriesToCreate);
+            }
         }
 
-        notificationQueryMapper.updateEntityFromForm(updateNotificationQueryForm, notificationQuery);
-        notificationQuery.setQueryTemplate(queryTemplate);
-        notificationQueryRepository.save(notificationQuery);
-        return makeSuccessResponse("Update notification query success");
+        return makeSuccessResponse("Create notification query success");
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

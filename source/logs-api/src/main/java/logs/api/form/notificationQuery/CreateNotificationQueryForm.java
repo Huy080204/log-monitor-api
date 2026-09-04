@@ -6,6 +6,7 @@ import logs.api.form.StringToLongDeserializer;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @Schema
@@ -15,8 +16,8 @@ public class CreateNotificationQueryForm {
     @Schema(name = "notificationGroupId", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long notificationGroupId;
 
-    @NotNull(message = "queryTemplateId cannot be null")
-    @JsonDeserialize(using = StringToLongDeserializer.class)
-    @Schema(name = "queryTemplateId", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long queryTemplateId;
+    @NotNull(message = "templateQueryIds cannot be null")
+    @JsonDeserialize(contentUsing = StringToLongDeserializer.class)
+    @Schema(name = "templateQueryIds", requiredMode = Schema.RequiredMode.REQUIRED)
+    private List<Long> templateQueryIds;
 }
