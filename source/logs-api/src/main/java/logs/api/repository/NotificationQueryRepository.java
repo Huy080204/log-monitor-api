@@ -36,4 +36,9 @@ public interface NotificationQueryRepository extends JpaRepository<NotificationQ
     @Transactional
     @Query("DELETE FROM NotificationQuery nq WHERE nq.queryTemplate.id IN (SELECT qt.id FROM QueryTemplate qt WHERE qt.application.id = :applicationId)")
     void deleteAllByQueryTemplateApplicationId(@Param("applicationId") Long applicationId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM NotificationQuery nq WHERE nq.application.id = :applicationId")
+    void deleteAllByApplicationId(@Param("applicationId") Long applicationId);
 }

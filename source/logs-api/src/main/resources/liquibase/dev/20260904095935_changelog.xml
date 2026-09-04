@@ -1,0 +1,11 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="Authentication" id="1788515985839-1">
+        <addColumn tableName="db_notification_query">
+            <column name="application_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1788515985839-2">
+        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="db_notification_query" constraintName="FKmq8jvskv8stfwx1262c64ndbu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_application" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

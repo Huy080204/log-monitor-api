@@ -164,6 +164,7 @@ class ApplicationsControllerTest {
         controller.delete(1L);
 
         InOrder inOrder = inOrder(notificationQueryRepository, queryTemplateRepository, applicationsRepository);
+        inOrder.verify(notificationQueryRepository).deleteAllByApplicationId(1L);
         inOrder.verify(notificationQueryRepository).deleteAllByQueryTemplateApplicationId(1L);
         inOrder.verify(queryTemplateRepository).deleteAllByApplicationId(1L);
         inOrder.verify(applicationsRepository).delete(entity);

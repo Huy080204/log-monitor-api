@@ -112,6 +112,7 @@ public class ApplicationsController extends ABasicController {
     public ApiMessageDto<Void> delete(@PathVariable Long id) {
         Applications applications = applicationsRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found applications!", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND));
+        notificationQueryRepository.deleteAllByApplicationId(id);
         notificationQueryRepository.deleteAllByQueryTemplateApplicationId(id);
         queryTemplateRepository.deleteAllByApplicationId(id);
         applicationsRepository.delete(applications);
