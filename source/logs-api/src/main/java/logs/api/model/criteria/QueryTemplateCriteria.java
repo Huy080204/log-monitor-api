@@ -28,6 +28,7 @@ public class QueryTemplateCriteria implements Serializable {
     private Long applicationId;
     private Long ignoreNotificationGroupId;
     private Boolean isGlobal; // null application
+    private Boolean includeGlobal; // include null-application
 
     @Schema(hidden = true)
     public Specification<QueryTemplate> getCriteria() {
@@ -50,8 +51,13 @@ public class QueryTemplateCriteria implements Serializable {
                 }
 
                 if (getApplicationId() != null) {
-                    Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.INNER);
-                    predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
+                    if (Boolean.TRUE.equals(getIncludeGlobal())) {
+                        Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.LEFT);
+                        predicates.add(cb.or(cb.equal(joinApplication.get("id"), getApplicationId()), cb.isNull(root.get("application"))));
+                    } else {
+                        Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.INNER);
+                        predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
+                    }
                 }
 
                 if (Boolean.TRUE.equals(getIsGlobal())) {
