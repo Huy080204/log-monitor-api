@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,10 +66,9 @@ public class QueryTemplateController extends ABasicController {
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('QTP_L')")
-    public ApiMessageDto<ResponseListDto<List<QueryTemplateDto>>> list(QueryTemplateCriteria queryTemplateCriteria, @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(new Sort.Order(Sort.Direction.ASC, "application.name").nullsLast()));
-        Page<QueryTemplate> page = queryTemplateRepository.findAll(queryTemplateCriteria.getCriteria(), sortedPageable);
+    public ApiMessageDto<ResponseListDto<List<QueryTemplateDto>>> list(QueryTemplateCriteria queryTemplateCriteria, @PageableDefault Pageable pageable) {
+        Pageable unsortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        Page<QueryTemplate> page = queryTemplateRepository.findAll(queryTemplateCriteria.getCriteria(), unsortedPageable);
         ResponseListDto<List<QueryTemplateDto>> responseListDto =
                 makeResponseListDto(page, queryTemplateMapper::fromEntityToQueryTemplateDtoList);
         return makeSuccessResponse(responseListDto, "Get list success");
