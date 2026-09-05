@@ -7,5 +7,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ApplicationsRepository extends JpaRepository<Applications, Long>, JpaSpecificationExecutor<Applications> {
     boolean existsByName(String name);
 
+    boolean existsByNameAndIdNot(String name, Long id);
+
     boolean existsByVictoriaAppId(String victoriaAppId);
+
+    boolean existsByVictoriaAppIdAndIdNot(String victoriaAppId, Long id);
 }

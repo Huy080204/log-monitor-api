@@ -67,11 +67,11 @@ public class VictoriaLogsErrorAlertScheduler {
                 return;
             }
 
-            String query = buildQuery(enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
+            String query = buildQuery(activeGroup.getTimeFrame(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
             Map<String, List<String>> breachLinesByApp = queryBreachesByApp(query, queryTemplateById,
                     enabledTemplateIdsByApp, appNameByVictoriaAppId);
             if (breachLinesByApp.isEmpty()) {
-                log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
+                log.debug("No app crossed any notification query threshold in the last {}m", activeGroup.getTimeFrame());
                 return;
             }
 
@@ -188,7 +188,7 @@ public class VictoriaLogsErrorAlertScheduler {
     }
 
     // Build LogsQL: time window + application:in(...) + one count() if per distinct QueryTemplate
-    String buildQuery(Collection<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
+    String buildQuery(Integer timeFrameMinutes, Collection<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
         StringBuilder apps = new StringBuilder();
         for (String victoriaAppId : victoriaAppIds) {
             if (apps.length() > 0) {
@@ -209,8 +209,8 @@ public class VictoriaLogsErrorAlertScheduler {
                     .append("\"");
         }
 
-        return String.format("_time:%s %s:in(%s) | stats by (%s) %s",
-                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps,
+        return String.format("_time:%dm %s:in(%s) | stats by (%s) %s",
+                timeFrameMinutes, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps,
                 BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 }

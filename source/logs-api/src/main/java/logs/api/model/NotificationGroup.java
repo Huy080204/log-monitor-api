@@ -25,4 +25,6 @@ public class NotificationGroup extends Auditable<String> {
     private String channelSetting;
 
     private Integer type; // 0: telegram, 1: slack
+
+    private Integer timeFrame; // minute
 }

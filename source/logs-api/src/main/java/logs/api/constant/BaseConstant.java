@@ -32,7 +32,6 @@ public class BaseConstant {
     public static final int NOTIFICATION_MESSAGE_MAX_LENGTH_TELEGRAM = 4096;
 
     // VictoriaLogs error-alert scheduler query config
-    public static final String VICTORIALOGS_QUERY_WINDOW = "5m";
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
 
     private BaseConstant() {
