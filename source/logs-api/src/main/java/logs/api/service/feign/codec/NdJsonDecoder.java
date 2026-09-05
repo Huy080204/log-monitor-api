@@ -29,7 +29,7 @@ public class NdJsonDecoder implements Decoder {
         }
         if (!(type instanceof ParameterizedType)) {
             throw new DecodeException(response.status(),
-                    "NdJsonDecoder chỉ hỗ trợ kiểu trả về List<T>, nhận được: " + type, response.request());
+                    "NdJsonDecoder only supports List<T> return type, got: " + type, response.request());
         }
         Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
         JavaType javaType = objectMapper.getTypeFactory().constructType(elementType);
