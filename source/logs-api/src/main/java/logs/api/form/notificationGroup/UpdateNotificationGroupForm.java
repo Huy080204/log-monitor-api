@@ -6,6 +6,7 @@ import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.NotificationChannelType;
 import lombok.Data;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -31,4 +32,9 @@ public class UpdateNotificationGroupForm {
     @NotificationChannelType(allowNull = true)
     @Schema(name = "type")
     private Integer type;
+
+    @NotNull(message = "timeFrame cannot be null")
+    @Min(value = 1, message = "timeFrame must be at least 1")
+    @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer timeFrame;
 }

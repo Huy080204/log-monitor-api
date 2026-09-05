@@ -100,10 +100,12 @@ public class ApplicationsController extends ABasicController {
         Applications applications = applicationsRepository.findById(updateApplicationsForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found applications!", ErrorCode.APPLICATIONS_ERROR_NOT_FOUND));
 
-        if (!Objects.equals(updateApplicationsForm.getName(), applications.getName()) && applicationsRepository.existsByName(updateApplicationsForm.getName())) {
+        if (!Objects.equals(updateApplicationsForm.getName(), applications.getName())
+                && applicationsRepository.existsByNameAndIdNot(updateApplicationsForm.getName(), applications.getId())) {
             throw new BadRequestException("Applications name already exists", ErrorCode.APPLICATIONS_ERROR_NAME_EXISTED);
         }
-        if (!Objects.equals(updateApplicationsForm.getVictoriaAppId(), applications.getVictoriaAppId()) && applicationsRepository.existsByVictoriaAppId(updateApplicationsForm.getVictoriaAppId())) {
+        if (!Objects.equals(updateApplicationsForm.getVictoriaAppId(), applications.getVictoriaAppId())
+                && applicationsRepository.existsByVictoriaAppIdAndIdNot(updateApplicationsForm.getVictoriaAppId(), applications.getId())) {
             throw new BadRequestException("Applications victoriaAppId already exists", ErrorCode.APPLICATIONS_ERROR_VICTORIA_APP_ID_EXISTED);
         }
 

@@ -15,4 +15,6 @@ public class NotificationGroupDto extends ABasicAdminDto {
     private String channelSetting;
     @Schema(name = "type")
     private Integer type;
+    @Schema(name = "timeFrame")
+    private Integer timeFrame;
 }
