@@ -113,8 +113,7 @@ class NotificationQueryControllerTest {
 
         controller.list(new NotificationQueryCriteria(), PageRequest.of(0, 10));
 
-        assertThat(pageableCaptor.getValue().getSort())
-                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsLast()));
+        assertThat(pageableCaptor.getValue().getSort()).isEqualTo(Sort.unsorted());
     }
 
     @Test
@@ -132,8 +131,7 @@ class NotificationQueryControllerTest {
         Pageable actual = pageableCaptor.getValue();
         assertThat(actual.getPageNumber()).isEqualTo(1);
         assertThat(actual.getPageSize()).isEqualTo(5);
-        assertThat(actual.getSort())
-                .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "queryTemplate.application.name").nullsLast()));
+        assertThat(actual.getSort()).isEqualTo(Sort.unsorted());
     }
 
     private static NotificationQueryLinkForm link(Long queryTemplateId, Long applicationId) {

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -57,6 +58,14 @@ public class NotificationQueryCriteria implements Serializable {
                 if (getStatus() != null) {
                     predicates.add(cb.equal(root.get("status"), getStatus()));
                 }
+
+                Join<NotificationQuery, QueryTemplate> sortQueryTemplateJoin = root.join("queryTemplate", JoinType.LEFT);
+                Join<QueryTemplate, Applications> sortApplicationJoin = sortQueryTemplateJoin.join("application", JoinType.LEFT);
+                Expression<Integer> nullApplicationRank = cb.<Integer>selectCase()
+                        .when(cb.isNull(sortApplicationJoin.get("id")), 1)
+                        .otherwise(0);
+                query.orderBy(cb.asc(nullApplicationRank), cb.asc(sortApplicationJoin.get("id")));
+
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         };
