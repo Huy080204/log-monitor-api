@@ -7,6 +7,7 @@ import logs.api.model.Applications;
 import logs.api.model.Notification;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
+import logs.api.model.QueryTemplate;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
@@ -19,10 +20,15 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -59,7 +65,22 @@ public class VictoriaLogsErrorAlertScheduler {
                 return;
             }
 
-            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(buildQuery(notificationQueries), notificationQueries);
+            Map<Long, Applications> uniqueApplicationsById = new LinkedHashMap<>();
+            Map<Long, QueryTemplate> uniqueQueryTemplatesById = new LinkedHashMap<>();
+            Map<Long, Set<Long>> enabledTemplateIdsByAppId = new HashMap<>();
+            // dedup into distinct Applications/QueryTemplates and which (application, queryTemplate) pairs are enabled
+            for (NotificationQuery notificationQuery : notificationQueries) {
+                Applications application = notificationQuery.getApplication();
+                QueryTemplate queryTemplate = notificationQuery.getQueryTemplate();
+                uniqueApplicationsById.putIfAbsent(application.getId(), application);
+                uniqueQueryTemplatesById.putIfAbsent(queryTemplate.getId(), queryTemplate);
+                enabledTemplateIdsByAppId.computeIfAbsent(application.getId(), k -> new HashSet<>()).add(queryTemplate.getId());
+            }
+
+            List<Applications> uniqueApplications = new ArrayList<>(uniqueApplicationsById.values());
+            List<QueryTemplate> uniqueQueryTemplates = new ArrayList<>(uniqueQueryTemplatesById.values());
+            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(buildQuery(uniqueApplications, uniqueQueryTemplates),
+                    uniqueApplications, uniqueQueryTemplates, enabledTemplateIdsByAppId);
             if (breachLinesByApp.isEmpty()) {
                 log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
                 return;
@@ -147,8 +168,9 @@ public class VictoriaLogsErrorAlertScheduler {
                 : value.substring(0, maxLength - ELLIPSIS.length()) + ELLIPSIS;
     }
 
-    // Run the query, then keep only (app, query) pairs whose count reached that query's threshold
-    private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) {
+    // Run the query, then keep only (app, template) pairs enabled in enabledTemplateIdsByAppId whose count hit the threshold
+    Map<String, List<String>> queryBreachesByApp(String query, List<Applications> uniqueApplications,
+            List<QueryTemplate> uniqueQueryTemplates, Map<Long, Set<Long>> enabledTemplateIdsByAppId) {
         log.info("Querying VictoriaLogs for breaches with query [{}]", query);
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         List<VictoriaLogsStatsDto> rows = feignVictoriaLogsService.query(
@@ -157,51 +179,57 @@ public class VictoriaLogsErrorAlertScheduler {
             return breachLinesByApp;
         }
 
+        Map<String, Long> applicationIdByVictoriaAppId = uniqueApplications.stream()
+                .collect(Collectors.toMap(Applications::getVictoriaAppId, Applications::getId));
+        Map<Long, QueryTemplate> queryTemplateById = uniqueQueryTemplates.stream()
+                .collect(Collectors.toMap(QueryTemplate::getId, Function.identity()));
+
         for (VictoriaLogsStatsDto row : rows) {
+            Long applicationId = applicationIdByVictoriaAppId.get(row.getApplication());
+            if (applicationId == null) {
+                continue;
+            }
+            Set<Long> enabledTemplateIds = enabledTemplateIdsByAppId.get(applicationId);
+            if (enabledTemplateIds == null || enabledTemplateIds.isEmpty()) {
+                continue;
+            }
             String app = row.getApplication() == null ? "unknown" : row.getApplication();
-            for (NotificationQuery notificationQuery : notificationQueries) {
-                int count = row.count(statsAlias(notificationQuery));
-                if (count >= notificationQuery.getQueryTemplate().getCount()) {
+            for (Long templateId : enabledTemplateIds) {
+                QueryTemplate queryTemplate = queryTemplateById.get(templateId);
+                int count = row.count(String.valueOf(templateId));
+                if (count >= queryTemplate.getCount()) {
                     breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
-                            .add(String.format("  • `%s`: %d", notificationQuery.getQueryTemplate().getName(), count));
+                            .add(String.format("  • `%s`: %d", queryTemplate.getName(), count));
                 }
             }
         }
         return breachLinesByApp;
     }
 
-    // Build LogsQL: time window + group by app + one conditional count("count() if (<query> AND application:"<victoriaAppId>") as "<id>"") per query
-    String buildQuery(List<NotificationQuery> notificationQueries) {
+    // Build LogsQL: time window + application:in(...) + one count() if per distinct QueryTemplate
+    String buildQuery(List<Applications> uniqueApplications, List<QueryTemplate> uniqueQueryTemplates) {
+        StringBuilder apps = new StringBuilder();
+        for (Applications application : uniqueApplications) {
+            if (apps.length() > 0) {
+                apps.append(", ");
+            }
+            apps.append("\"").append(application.getVictoriaAppId()).append("\"");
+        }
+
         StringBuilder stats = new StringBuilder();
-        for (NotificationQuery notificationQuery : notificationQueries) {
-            String query = notificationQuery.getQueryTemplate().getQuery();
-            if (query == null || query.trim().isEmpty()) {
-                log.warn("NotificationQuery [{}] has a blank query, skip it", notificationQuery.getId());
-                continue;
-            }
-            Applications application = notificationQuery.getApplication();
-            if (application == null) {
-                log.warn("NotificationQuery [{}] has no application, skip it", notificationQuery.getId());
-                continue;
-            }
+        for (QueryTemplate queryTemplate : uniqueQueryTemplates) {
             if (stats.length() > 0) {
                 stats.append(", ");
             }
             stats.append("count() if (")
-                    .append(query.trim())
-                    .append(" AND ")
-                    .append(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD)
-                    .append(":\"")
-                    .append(application.getVictoriaAppId())
-                    .append("\") as \"")
-                    .append(statsAlias(notificationQuery))
+                    .append(queryTemplate.getQuery().trim())
+                    .append(") as \"")
+                    .append(queryTemplate.getId())
                     .append("\"");
         }
-        return String.format("_time:%s | stats by (%s) %s",
-                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
-    }
 
-    private String statsAlias(NotificationQuery notificationQuery) {
-        return String.valueOf(notificationQuery.getId());
+        return String.format("_time:%s %s:in(%s) | stats by (%s) %s",
+                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps,
+                BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 }
