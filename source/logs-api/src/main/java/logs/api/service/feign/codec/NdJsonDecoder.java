@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -18,11 +19,8 @@ import java.util.List;
 
 public class NdJsonDecoder implements Decoder {
 
-    private final ObjectMapper objectMapper;
-
-    public NdJsonDecoder(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public Object decode(Response response, Type type) throws IOException {

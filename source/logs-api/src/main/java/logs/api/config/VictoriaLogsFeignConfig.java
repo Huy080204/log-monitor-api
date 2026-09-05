@@ -1,6 +1,5 @@
 package logs.api.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.RequestInterceptor;
 import feign.auth.BasicAuthRequestInterceptor;
 import feign.codec.Decoder;
@@ -24,12 +23,12 @@ public class VictoriaLogsFeignConfig {
     }
 
     @Bean
-    public Encoder victoriaLogsEncoder(ObjectMapper objectMapper) {
-        return new FormUrlEncodedEncoder(objectMapper);
+    public Encoder victoriaLogsEncoder() {
+        return new FormUrlEncodedEncoder();
     }
 
     @Bean
-    public Decoder victoriaLogsDecoder(ObjectMapper objectMapper) {
-        return new NdJsonDecoder(objectMapper);
+    public Decoder victoriaLogsDecoder() {
+        return new NdJsonDecoder();
     }
 }

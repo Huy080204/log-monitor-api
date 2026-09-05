@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
@@ -14,11 +15,8 @@ import java.util.Map;
 
 public class FormUrlEncodedEncoder implements Encoder {
 
-    private final ObjectMapper objectMapper;
-
-    public FormUrlEncodedEncoder(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template) {
