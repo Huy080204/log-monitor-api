@@ -3,10 +3,7 @@ package logs.api.scheduler;
 import logs.api.constant.BaseConstant;
 import logs.api.dto.victorialogs.VictoriaLogsQueryForm;
 import logs.api.dto.victorialogs.VictoriaLogsStatsDto;
-import logs.api.model.Applications;
-import logs.api.model.Notification;
-import logs.api.model.NotificationGroup;
-import logs.api.model.NotificationQuery;
+import logs.api.model.*;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
@@ -17,12 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -52,14 +44,32 @@ public class VictoriaLogsErrorAlertScheduler {
                 return;
             }
 
-            List<NotificationQuery> notificationQueries = notificationQueryRepository
-                    .findAllByNotificationGroupIdAndStatus(activeGroup.getId(), BaseConstant.STATUS_ACTIVE);
+            List<NotificationQuery> notificationQueries = notificationQueryRepository.findAllByNotificationGroupId(activeGroup.getId());
             if (notificationQueries.isEmpty()) {
                 log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
                 return;
             }
 
-            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(buildQuery(notificationQueries), notificationQueries);
+            Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
+            Map<String, Set<Long>> enabledTemplateIdsByApp = new LinkedHashMap<>();
+            Map<String, String> appNameByVictoriaAppId = new LinkedHashMap<>();
+            // dedup into distinct QueryTemplates and which (victoriaAppId, queryTemplate) pairs are enabled
+            for (NotificationQuery notificationQuery : notificationQueries) {
+                Applications application = notificationQuery.getApplication();
+                QueryTemplate queryTemplate = notificationQuery.getQueryTemplate();
+                queryTemplateById.putIfAbsent(queryTemplate.getId(), queryTemplate);
+                enabledTemplateIdsByApp.computeIfAbsent(application.getVictoriaAppId(), k -> new LinkedHashSet<>())
+                        .add(queryTemplate.getId());
+                appNameByVictoriaAppId.putIfAbsent(application.getVictoriaAppId(), application.getName());
+            }
+            if (enabledTemplateIdsByApp.isEmpty()) {
+                log.debug("Active notification group [{}] has no usable notification query, skip VictoriaLogs error check", activeGroup.getName());
+                return;
+            }
+
+            String query = buildQuery(enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
+            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(query, queryTemplateById,
+                    enabledTemplateIdsByApp, appNameByVictoriaAppId);
             if (breachLinesByApp.isEmpty()) {
                 log.debug("No app crossed any notification query threshold in the last {}", BaseConstant.VICTORIALOGS_QUERY_WINDOW);
                 return;
@@ -147,8 +157,10 @@ public class VictoriaLogsErrorAlertScheduler {
                 : value.substring(0, maxLength - ELLIPSIS.length()) + ELLIPSIS;
     }
 
-    // Run the query, then keep only (app, query) pairs whose count reached that query's threshold
-    private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) {
+    // Run the query, then keep only (app, template) pairs enabled in enabledTemplateIdsByApp whose count hit the threshold
+    Map<String, List<String>> queryBreachesByApp(String query, Map<Long, QueryTemplate> queryTemplateById,
+                                                 Map<String, Set<Long>> enabledTemplateIdsByApp,
+                                                 Map<String, String> appNameByVictoriaAppId) {
         log.info("Querying VictoriaLogs for breaches with query [{}]", query);
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         List<VictoriaLogsStatsDto> rows = feignVictoriaLogsService.query(
@@ -158,50 +170,47 @@ public class VictoriaLogsErrorAlertScheduler {
         }
 
         for (VictoriaLogsStatsDto row : rows) {
-            String app = row.getApplication() == null ? "unknown" : row.getApplication();
-            for (NotificationQuery notificationQuery : notificationQueries) {
-                int count = row.count(statsAlias(notificationQuery));
-                if (count >= notificationQuery.getQueryTemplate().getCount()) {
-                    breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
-                            .add(String.format("  • `%s`: %d", notificationQuery.getQueryTemplate().getName(), count));
+            Set<Long> enabledTemplateIds = enabledTemplateIdsByApp.get(row.getApplication());
+            if (enabledTemplateIds == null) {
+                continue;
+            }
+            String appName = appNameByVictoriaAppId.getOrDefault(row.getApplication(), row.getApplication());
+            for (Long templateId : enabledTemplateIds) {
+                QueryTemplate queryTemplate = queryTemplateById.get(templateId);
+                int count = row.count(String.valueOf(templateId));
+                if (count >= queryTemplate.getCount()) {
+                    breachLinesByApp.computeIfAbsent(appName, k -> new ArrayList<>())
+                            .add(String.format("  • `%s`: %d", queryTemplate.getName(), count));
                 }
             }
         }
         return breachLinesByApp;
     }
 
-    // Build LogsQL: time window + group by app + one conditional count("count() if (<query> AND application:"<victoriaAppId>") as "<id>"") per query
-    String buildQuery(List<NotificationQuery> notificationQueries) {
+    // Build LogsQL: time window + application:in(...) + one count() if per distinct QueryTemplate
+    String buildQuery(Collection<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
+        StringBuilder apps = new StringBuilder();
+        for (String victoriaAppId : victoriaAppIds) {
+            if (apps.length() > 0) {
+                apps.append(", ");
+            }
+            apps.append("\"").append(victoriaAppId).append("\"");
+        }
+
         StringBuilder stats = new StringBuilder();
-        for (NotificationQuery notificationQuery : notificationQueries) {
-            String query = notificationQuery.getQueryTemplate().getQuery();
-            if (query == null || query.trim().isEmpty()) {
-                log.warn("NotificationQuery [{}] has a blank query, skip it", notificationQuery.getId());
-                continue;
-            }
-            Applications application = notificationQuery.getApplication();
-            if (application == null) {
-                log.warn("NotificationQuery [{}] has no application, skip it", notificationQuery.getId());
-                continue;
-            }
+        for (QueryTemplate queryTemplate : queryTemplates) {
             if (stats.length() > 0) {
                 stats.append(", ");
             }
             stats.append("count() if (")
-                    .append(query.trim())
-                    .append(" AND ")
-                    .append(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD)
-                    .append(":\"")
-                    .append(application.getVictoriaAppId())
-                    .append("\") as \"")
-                    .append(statsAlias(notificationQuery))
+                    .append(queryTemplate.getQuery().trim())
+                    .append(") as \"")
+                    .append(queryTemplate.getId())
                     .append("\"");
         }
-        return String.format("_time:%s | stats by (%s) %s",
-                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
-    }
 
-    private String statsAlias(NotificationQuery notificationQuery) {
-        return String.valueOf(notificationQuery.getId());
+        return String.format("_time:%s %s:in(%s) | stats by (%s) %s",
+                BaseConstant.VICTORIALOGS_QUERY_WINDOW, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps,
+                BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 }
