@@ -1,9 +1,8 @@
 package logs.api.scheduler;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import logs.api.constant.BaseConstant;
+import logs.api.dto.victorialogs.VictoriaLogsQueryForm;
+import logs.api.dto.victorialogs.VictoriaLogsStatsDto;
 import logs.api.model.Applications;
 import logs.api.model.Notification;
 import logs.api.model.NotificationGroup;
@@ -42,9 +41,6 @@ public class VictoriaLogsErrorAlertScheduler {
 
     @Autowired
     private NotificationRepository notificationRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Scheduled(cron = "0 */5 * * * *")
     public void checkErrorRateAndAlert() {
@@ -152,23 +148,19 @@ public class VictoriaLogsErrorAlertScheduler {
     }
 
     // Run the query, then keep only (app, query) pairs whose count reached that query's threshold
-    private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) throws Exception {
+    private Map<String, List<String>> queryBreachesByApp(String query, List<NotificationQuery> notificationQueries) {
         log.info("Querying VictoriaLogs for breaches with query [{}]", query);
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
-        String rawBody = feignVictoriaLogsService.query(FeignConst.LOGIN_TYPE_NO_AUTH, query);
-        if (rawBody == null || rawBody.trim().isEmpty()) {
+        List<VictoriaLogsStatsDto> rows = feignVictoriaLogsService.query(
+                FeignConst.LOGIN_TYPE_NO_AUTH, VictoriaLogsQueryForm.of(query));
+        if (rows == null || rows.isEmpty()) {
             return breachLinesByApp;
         }
 
-        MappingIterator<Map<String, String>> lines = objectMapper
-                .readerFor(new TypeReference<Map<String, String>>() {})
-                .readValues(rawBody);
-        while (lines.hasNext()) {
-            Map<String, String> line = lines.next();
-            String app = line.getOrDefault(BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, "unknown");
+        for (VictoriaLogsStatsDto row : rows) {
+            String app = row.getApplication() == null ? "unknown" : row.getApplication();
             for (NotificationQuery notificationQuery : notificationQueries) {
-                String value = line.get(statsAlias(notificationQuery));
-                int count = value == null || value.isEmpty() ? 0 : Integer.parseInt(value);
+                int count = row.count(statsAlias(notificationQuery));
                 if (count >= notificationQuery.getQueryTemplate().getCount()) {
                     breachLinesByApp.computeIfAbsent(app, k -> new ArrayList<>())
                             .add(String.format("  • `%s`: %d", notificationQuery.getQueryTemplate().getName(), count));

@@ -2,11 +2,13 @@ package logs.api.config;
 
 import feign.RequestInterceptor;
 import feign.auth.BasicAuthRequestInterceptor;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import logs.api.service.feign.codec.FormUrlEncodedEncoder;
+import logs.api.service.feign.codec.NdJsonDecoder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 public class VictoriaLogsFeignConfig {
 
     @Value("${victorialogs.api.username}")
@@ -18,5 +20,15 @@ public class VictoriaLogsFeignConfig {
     @Bean
     public RequestInterceptor victoriaLogsBasicAuthRequestInterceptor() {
         return new BasicAuthRequestInterceptor(username, password);
+    }
+
+    @Bean
+    public Encoder victoriaLogsEncoder() {
+        return new FormUrlEncodedEncoder();
+    }
+
+    @Bean
+    public Decoder victoriaLogsDecoder() {
+        return new NdJsonDecoder();
     }
 }

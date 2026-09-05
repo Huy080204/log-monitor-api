@@ -6,6 +6,7 @@ import logs.api.validation.NotificationQueryStatus;
 import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -26,6 +27,7 @@ public class UpdateQueryTemplateForm {
     private String query;
 
     @NotNull(message = "count cannot be null")
+    @Min(value = 1, message = "count must be greater than or equal to 1")
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
 }
