@@ -40,8 +40,6 @@ public interface QueryTemplateMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
-    @Mapping(source = "timeFrame", target = "timeFrame")
-    @Mapping(source = "note", target = "note")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminCreateMapping")
     QueryTemplate fromFormToEntity(CreateQueryTemplateForm createQueryTemplateForm);
@@ -49,8 +47,6 @@ public interface QueryTemplateMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "query", target = "query")
     @Mapping(source = "count", target = "count")
-    @Mapping(source = "timeFrame", target = "timeFrame")
-    @Mapping(source = "note", target = "note")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminUpdateMapping")
     void updateEntityFromForm(UpdateQueryTemplateForm updateQueryTemplateForm, @MappingTarget QueryTemplate queryTemplate);

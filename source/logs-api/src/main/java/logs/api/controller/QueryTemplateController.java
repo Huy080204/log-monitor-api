@@ -17,6 +17,7 @@ import logs.api.repository.ApplicationsRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.QueryTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -99,6 +100,12 @@ public class QueryTemplateController extends ABasicController {
         if (existed) {
             throw new BadRequestException("Query template name already exist", ErrorCode.QUERY_TEMPLATE_ERROR_NAME_EXISTED);
         }
+        if (StringUtils.isNotBlank(createQueryTemplateForm.getNote())) {
+            queryTemplate.setNote(createQueryTemplateForm.getNote());
+        }
+        if (StringUtils.isNotBlank(createQueryTemplateForm.getTimeFrame())) {
+            queryTemplate.setTimeFrame(createQueryTemplateForm.getTimeFrame());
+        }
 
         queryTemplateRepository.save(queryTemplate);
         return makeSuccessResponse(queryTemplateMapper.fromEntityToQueryTemplateIdDto(queryTemplate), "Create query template success");
@@ -122,6 +129,12 @@ public class QueryTemplateController extends ABasicController {
         }
 
         queryTemplateMapper.updateEntityFromForm(updateQueryTemplateForm, queryTemplate);
+        if (StringUtils.isNotBlank(updateQueryTemplateForm.getNote())) {
+            queryTemplate.setNote(updateQueryTemplateForm.getNote());
+        }
+        if (StringUtils.isNotBlank(updateQueryTemplateForm.getTimeFrame())) {
+            queryTemplate.setTimeFrame(updateQueryTemplateForm.getTimeFrame());
+        }
 
         queryTemplateRepository.save(queryTemplate);
         return makeSuccessResponse("Update query template success");
