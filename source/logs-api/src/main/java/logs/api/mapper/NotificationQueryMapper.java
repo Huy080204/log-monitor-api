@@ -20,7 +20,7 @@ public interface NotificationQueryMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "notificationGroup", target = "notificationGroup", qualifiedByName = "fromEntityToNotificationGroupDtoAutoComplete")
     @Mapping(source = "queryTemplate", target = "queryTemplate", qualifiedByName = "fromEntityToQueryTemplateDto")
-    @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationsAutoCompleteDto")
+    @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationShortDto")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "modifiedDate", target = "modifiedDate")

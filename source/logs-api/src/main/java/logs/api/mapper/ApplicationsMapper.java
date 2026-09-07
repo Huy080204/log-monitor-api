@@ -48,4 +48,11 @@ public interface ApplicationsMapper {
 
     @IterableMapping(elementTargetType = ApplicationsDto.class, qualifiedByName = "fromEntityToApplicationsAutoCompleteDto")
     List<ApplicationsDto> fromEntityToApplicationsAutoCompleteDtoList(List<Applications> applicationsList);
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "victoriaAppId", target = "victoriaAppId")
+    @BeanMapping(ignoreByDefault = true)
+    @Named("fromEntityToApplicationShortDto")
+    ApplicationsDto fromEntityToApplicationShortDto(Applications applications);
 }
