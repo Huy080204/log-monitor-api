@@ -27,6 +27,9 @@ public class QueryTemplate extends Auditable<String> {
     @Column(name = "time_frame")
     private String timeFrame;
 
+    @Column(name = "note", columnDefinition = "longtext")
+    private String note;
+
     @ManyToOne
     @JoinColumn(name = "application_id")
     private Applications application;

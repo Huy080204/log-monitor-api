@@ -89,4 +89,9 @@
             <column name="time_frame" type="varchar(255)" afterColumn="count"/>
         </addColumn>
     </changeSet>
+    <changeSet author="Authentication" id="1788672011106-13">
+        <addColumn tableName="db_query_template">
+            <column name="note" type="longtext" afterColumn="time_frame"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
