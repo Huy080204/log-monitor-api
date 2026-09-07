@@ -77,7 +77,10 @@ public class QueryTemplateCriteria implements Serializable {
                 Expression<Integer> nullApplicationRank = cb.<Integer>selectCase()
                         .when(cb.isNull(root.get("application")), 1)
                         .otherwise(0);
-                query.orderBy(cb.asc(nullApplicationRank), cb.asc(sortApplicationJoin.get("id")));
+                Expression<Long> idSortKey = cb.<Long>selectCase()
+                        .when(cb.isNull(root.get("application")), root.<Long>get("id"))
+                        .otherwise(sortApplicationJoin.<Long>get("id"));
+                query.orderBy(cb.asc(nullApplicationRank), cb.desc(idSortKey));
 
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }

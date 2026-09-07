@@ -30,4 +30,8 @@ public class UpdateQueryTemplateForm {
     @Min(value = 1, message = "count must be greater than or equal to 1")
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
+
+    @NotBlank(message = "timeFrame cannot be null")
+    @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String timeFrame;
 }

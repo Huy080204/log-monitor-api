@@ -1,0 +1,92 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="Authentication" id="1788592666768-1">
+        <createTable tableName="db_application">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="db_applicationPK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="victoria_app_id" type="VARCHAR(255)"/>
+            <column name="description" type="TEXT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-2">
+        <createTable tableName="db_query_template">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="db_query_templatePK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="query" type="VARCHAR(255)"/>
+            <column name="count" type="INT"/>
+            <column name="application_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-3">
+        <addColumn tableName="db_notification_query">
+            <column name="application_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-4">
+        <addColumn tableName="db_notification_query">
+            <column name="query_template_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-5">
+        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="db_query_template" constraintName="FK1pth54xfmcjw59gy87fea7nks" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_application" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-6">
+        <addForeignKeyConstraint baseColumnNames="query_template_id" baseTableName="db_notification_query" constraintName="FKji936spkus1gvjiy4o2p7sho5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_query_template" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-7">
+        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="db_notification_query" constraintName="FKmq8jvskv8stfwx1262c64ndbu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_application" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-8">
+        <dropColumn columnName="count" tableName="db_notification_query"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-9">
+        <dropColumn columnName="name" tableName="db_notification_query"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788592666768-10">
+        <dropColumn columnName="query" tableName="db_notification_query"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1788672011106-11">
+        <addColumn tableName="db_notification_group">
+            <column name="time_frame" type="integer" afterColumn="type"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1788672011106-12">
+        <addColumn tableName="db_query_template">
+            <column name="time_frame" type="varchar(255)" afterColumn="count"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

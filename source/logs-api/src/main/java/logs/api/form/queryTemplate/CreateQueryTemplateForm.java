@@ -25,6 +25,10 @@ public class CreateQueryTemplateForm {
     @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer count;
 
+    @NotBlank(message = "timeFrame cannot be null")
+    @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String timeFrame;
+
     @Schema(name = "applicationId")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     private Long applicationId;

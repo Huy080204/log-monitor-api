@@ -17,6 +17,9 @@ public class QueryTemplateDto extends ABasicAdminDto {
     @Schema(name = "count")
     private Integer count;
 
+    @Schema(name = "timeFrame")
+    private String timeFrame;
+
     @Schema(name = "application")
     private ApplicationsDto application;
 }
