@@ -10,15 +10,16 @@ import logs.api.repository.NotificationRepository;
 import logs.api.service.feign.FeignConst;
 import logs.api.service.feign.FeignVictoriaLogsService;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component
+@DisallowConcurrentExecution // Prevents concurrent execution of the same notification group's job
 @Slf4j
-public class VictoriaLogsErrorAlertScheduler {
+public class VictoriaLogsErrorAlertJob implements Job {
 
     private static final String ELLIPSIS = "...";
 
@@ -34,71 +35,76 @@ public class VictoriaLogsErrorAlertScheduler {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    @Scheduled(cron = "0 */5 * * * *")
-    public void checkErrorRateAndAlert() {
+    @Override
+    public void execute(JobExecutionContext context) {
+        Long groupId = (Long) context.getJobDetail().getJobDataMap().get("groupId");
         try {
-            log.info("Start checkErrorRateAndAlert");
-            NotificationGroup activeGroup = notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE).orElse(null);
+            log.info("Start checkErrorRateAndAlert for group [{}]", groupId);
+            NotificationGroup activeGroup = notificationGroupRepository.findById(groupId).orElse(null);
             if (activeGroup == null) {
-                log.debug("No active notification group configured, skip VictoriaLogs error check");
+                log.debug("Notification group [{}] not found, skip VictoriaLogs error check", groupId);
                 return;
             }
 
-            List<NotificationQuery> notificationQueries = notificationQueryRepository.findAllByNotificationGroupId(activeGroup.getId());
-            if (notificationQueries.isEmpty()) {
-                log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
-                return;
-            }
-
-            Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
-            Map<String, Set<Long>> enabledTemplateIdsByApp = new LinkedHashMap<>();
-            Map<String, String> appNameByVictoriaAppId = new LinkedHashMap<>();
-            // dedup into distinct QueryTemplates and which (victoriaAppId, queryTemplate) pairs are enabled
-            for (NotificationQuery notificationQuery : notificationQueries) {
-                Applications application = notificationQuery.getApplication();
-                QueryTemplate queryTemplate = notificationQuery.getQueryTemplate();
-                queryTemplateById.putIfAbsent(queryTemplate.getId(), queryTemplate);
-                enabledTemplateIdsByApp.computeIfAbsent(application.getVictoriaAppId(), k -> new LinkedHashSet<>())
-                        .add(queryTemplate.getId());
-                appNameByVictoriaAppId.putIfAbsent(application.getVictoriaAppId(), application.getName());
-            }
-            if (enabledTemplateIdsByApp.isEmpty()) {
-                log.debug("Active notification group [{}] has no usable notification query, skip VictoriaLogs error check", activeGroup.getName());
-                return;
-            }
-
-            String query = buildQuery(activeGroup.getTimeFrame(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
-            Map<String, List<String>> breachLinesByApp = queryBreachesByApp(query, queryTemplateById,
-                    enabledTemplateIdsByApp, appNameByVictoriaAppId);
-            if (breachLinesByApp.isEmpty()) {
-                log.debug("No app crossed any notification query threshold in the last {}m", activeGroup.getTimeFrame());
-                return;
-            }
-
-            List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
-            Collections.sort(apps);
-
-            String title = "🚨 Cảnh báo hệ thống";
-            int budget = messageBudget(activeGroup.getType()) - title.length() - 1;
-            if (budget <= 0) {
-                log.error("Message limit for channel type [{}] is too small for title [{}], skip creating notification",
-                        activeGroup.getType(), title);
-                return;
-            }
-
-            List<Notification> notifications = new ArrayList<>();
-            for (String bodyPart : packBodies(apps, breachLinesByApp, budget)) {
-                Notification notification = new Notification();
-                notification.setMessage(title + "\n" + bodyPart);
-                notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
-                notification.setNotificationGroup(activeGroup);
-                notifications.add(notification);
-            }
-            notificationRepository.saveAll(notifications);
-            log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
+            checkErrorRateAndAlert(activeGroup);
         } catch (Exception e) {
-            log.error("Error occurred in checkErrorRateAndAlert schedule", e);
+            log.error("Error occurred in checkErrorRateAndAlert job", e);
         }
+    }
+
+    private void checkErrorRateAndAlert(NotificationGroup activeGroup) {
+        List<NotificationQuery> notificationQueries = notificationQueryRepository.findAllByNotificationGroupId(activeGroup.getId());
+        if (notificationQueries.isEmpty()) {
+            log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
+            return;
+        }
+
+        Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
+        Map<String, Set<Long>> enabledTemplateIdsByApp = new LinkedHashMap<>();
+        Map<String, String> appNameByVictoriaAppId = new LinkedHashMap<>();
+        // dedup into distinct QueryTemplates and which (victoriaAppId, queryTemplate) pairs are enabled
+        for (NotificationQuery notificationQuery : notificationQueries) {
+            Applications application = notificationQuery.getApplication();
+            QueryTemplate queryTemplate = notificationQuery.getQueryTemplate();
+            queryTemplateById.putIfAbsent(queryTemplate.getId(), queryTemplate);
+            enabledTemplateIdsByApp.computeIfAbsent(application.getVictoriaAppId(), k -> new LinkedHashSet<>())
+                    .add(queryTemplate.getId());
+            appNameByVictoriaAppId.putIfAbsent(application.getVictoriaAppId(), application.getName());
+        }
+        if (enabledTemplateIdsByApp.isEmpty()) {
+            log.debug("Active notification group [{}] has no usable notification query, skip VictoriaLogs error check", activeGroup.getName());
+            return;
+        }
+
+        String query = buildQuery(activeGroup.getTimeFrame(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
+        Map<String, List<String>> breachLinesByApp = queryBreachesByApp(query, queryTemplateById,
+                enabledTemplateIdsByApp, appNameByVictoriaAppId);
+        if (breachLinesByApp.isEmpty()) {
+            log.debug("No app crossed any notification query threshold in the last {}m", activeGroup.getTimeFrame());
+            return;
+        }
+
+        List<String> apps = new ArrayList<>(breachLinesByApp.keySet());
+        Collections.sort(apps);
+
+        String title = "🚨 Cảnh báo hệ thống";
+        int budget = messageBudget(activeGroup.getType()) - title.length() - 1;
+        if (budget <= 0) {
+            log.error("Message limit for channel type [{}] is too small for title [{}], skip creating notification",
+                    activeGroup.getType(), title);
+            return;
+        }
+
+        List<Notification> notifications = new ArrayList<>();
+        for (String bodyPart : packBodies(apps, breachLinesByApp, budget)) {
+            Notification notification = new Notification();
+            notification.setMessage(title + "\n" + bodyPart);
+            notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
+            notification.setNotificationGroup(activeGroup);
+            notifications.add(notification);
+        }
+        notificationRepository.saveAll(notifications);
+        log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
     }
 
     // Pack app chunks into messages, starting a new message once the limit is hit

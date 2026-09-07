@@ -256,48 +256,4 @@ class NotificationGroupControllerTest {
         inOrder.verify(notificationGroupRepository).delete(entity);
     }
 
-    @Test
-    void shouldThrowNotFoundWhenActivateIdDoesNotExist() {
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> controller.activate(1L))
-                .isInstanceOf(NotFoundException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND);
-    }
-
-    @Test
-    void shouldActivateWithoutFlippingWhenNoGroupIsCurrentlyActive() {
-        NotificationGroup target = new NotificationGroup();
-        target.setId(1L);
-        target.setStatus(BaseConstant.STATUS_PENDING);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(target));
-        when(notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE)).thenReturn(Optional.empty());
-
-        controller.activate(1L);
-
-        assertThat(target.getStatus()).isEqualTo(BaseConstant.STATUS_ACTIVE);
-        verify(notificationGroupRepository, times(1)).save(target);
-    }
-
-    @Test
-    void shouldFlipPreviousActiveGroupToPendingWhenActivatingAnotherGroup() {
-        NotificationGroup target = new NotificationGroup();
-        target.setId(2L);
-        target.setStatus(BaseConstant.STATUS_PENDING);
-        NotificationGroup currentActive = new NotificationGroup();
-        currentActive.setId(1L);
-        currentActive.setStatus(BaseConstant.STATUS_ACTIVE);
-        when(notificationGroupRepository.findById(2L)).thenReturn(Optional.of(target));
-        when(notificationGroupRepository.findFirstByStatus(BaseConstant.STATUS_ACTIVE)).thenReturn(Optional.of(currentActive));
-
-        controller.activate(2L);
-
-        assertThat(currentActive.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
-        assertThat(target.getStatus()).isEqualTo(BaseConstant.STATUS_ACTIVE);
-        // NotificationGroup inherits ReuseId's Lombok @Data equals(), which compares only
-        // `reusedId` (unset here) — currentActive.equals(target) is true, so a bare-argument
-        // verify() would ambiguously match either save() call. same() pins each to its own call.
-        verify(notificationGroupRepository).save(same(currentActive));
-        verify(notificationGroupRepository).save(same(target));
-    }
 }
