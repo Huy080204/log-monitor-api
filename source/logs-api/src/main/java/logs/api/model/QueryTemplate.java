@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.JoinColumn;
@@ -22,6 +23,9 @@ public class QueryTemplate extends Auditable<String> {
     private String query;
 
     private Integer count;
+
+    @Column(name = "time_frame")
+    private String timeFrame;
 
     @ManyToOne
     @JoinColumn(name = "application_id")
