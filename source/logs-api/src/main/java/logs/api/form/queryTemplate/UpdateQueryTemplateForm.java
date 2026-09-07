@@ -34,4 +34,8 @@ public class UpdateQueryTemplateForm {
     @NotBlank(message = "timeFrame cannot be null")
     @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
     private String timeFrame;
+
+    @NotBlank(message = "note cannot be null")
+    @Schema(name = "note", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String note;
 }
