@@ -23,6 +23,7 @@ public class QuartzStartupSync implements ApplicationListener<ApplicationReadyEv
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
+        log.info("QuartzStartupSync begin — syncing active notification groups");
         for (NotificationGroup group : notificationGroupRepository.findAllByStatus(BaseConstant.STATUS_ACTIVE)) {
             try {
                 quartzSchedulerService.scheduleGroup(group);
@@ -31,5 +32,6 @@ public class QuartzStartupSync implements ApplicationListener<ApplicationReadyEv
                         group.getId(), e.getMessage(), e);
             }
         }
+        log.info("QuartzStartupSync finished");
     }
 }

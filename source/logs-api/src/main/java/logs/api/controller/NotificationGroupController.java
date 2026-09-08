@@ -151,6 +151,7 @@ public class NotificationGroupController extends ABasicController {
         notificationRepository.deleteAllByNotificationGroupId(id);
         notificationQueryRepository.deleteAllByNotificationGroupId(id);
         notificationGroupRepository.delete(notificationGroup);
+        quartzSchedulerService.deleteGroup(id);
         return makeSuccessResponse("Delete notification group success");
     }
 

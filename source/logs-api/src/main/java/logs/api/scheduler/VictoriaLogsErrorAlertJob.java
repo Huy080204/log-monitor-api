@@ -47,6 +47,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
             }
 
             checkErrorRateAndAlert(activeGroup);
+            log.info("Finished checkErrorRateAndAlert for group [{}]", groupId);
         } catch (Exception e) {
             log.error("Error occurred in checkErrorRateAndAlert job", e);
         }

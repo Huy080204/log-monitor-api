@@ -46,9 +46,20 @@ public class QuartzSchedulerService {
         TriggerKey triggerKey = buildTriggerKey(groupId);
         try {
             scheduler.unscheduleJob(triggerKey);
+            log.info("Unscheduled notification group [{}]", groupId);
         } catch (SchedulerException e) {
             log.error("Error unscheduling notification group {}: {}", groupId, e.getMessage(), e);
             throw new RuntimeException("Error unscheduling notification group", e);
+        }
+    }
+
+    public void deleteGroup(Long groupId) {
+        try {
+            scheduler.deleteJob(buildJobKey(groupId));
+            log.info("Deleted notification group [{}] from Quartz", groupId);
+        } catch (SchedulerException e) {
+            log.error("Error deleting notification group {}: {}", groupId, e.getMessage(), e);
+            throw new RuntimeException("Error deleting notification group", e);
         }
     }
 
@@ -60,8 +71,10 @@ public class QuartzSchedulerService {
         CronTrigger trigger = buildTrigger(group, triggerKey);
         if (scheduler.checkExists(triggerKey)) {
             scheduler.rescheduleJob(triggerKey, trigger);
+            log.info("Rescheduled notification group [{}]", group.getId());
         } else {
             scheduler.scheduleJob(trigger);
+            log.info("Scheduled notification group [{}]", group.getId());
         }
     }
 
