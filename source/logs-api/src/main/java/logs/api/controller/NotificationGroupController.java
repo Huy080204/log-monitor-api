@@ -121,7 +121,7 @@ public class NotificationGroupController extends ABasicController {
         }
 
         boolean wasActive = BaseConstant.STATUS_ACTIVE.equals(notificationGroup.getStatus());
-        String oldCronExpression = notificationGroup.getCronExpression();
+        Integer oldTimeFrame = notificationGroup.getTimeFrame();
 
         notificationGroupMapper.updateEntityFromForm(updateNotificationGroupForm, notificationGroup);
         if (updateNotificationGroupForm.getType() == null) {
@@ -130,7 +130,7 @@ public class NotificationGroupController extends ABasicController {
         }
         notificationGroupRepository.save(notificationGroup);
 
-        boolean scheduleChanged = !Objects.equals(oldCronExpression, notificationGroup.getCronExpression());
+        boolean scheduleChanged = !Objects.equals(oldTimeFrame, notificationGroup.getTimeFrame());
         if (wasActive && scheduleChanged) {
             quartzSchedulerService.rescheduleGroup(notificationGroup);
         }

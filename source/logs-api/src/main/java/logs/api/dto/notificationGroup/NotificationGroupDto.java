@@ -17,6 +17,4 @@ public class NotificationGroupDto extends ABasicAdminDto {
     private Integer type;
     @Schema(name = "timeFrame")
     private Integer timeFrame;
-    @Schema(name = "cronExpression")
-    private String cronExpression;
 }

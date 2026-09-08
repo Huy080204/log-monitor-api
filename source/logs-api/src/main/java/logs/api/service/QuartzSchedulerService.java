@@ -3,14 +3,14 @@ package logs.api.service;
 import logs.api.model.NotificationGroup;
 import logs.api.scheduler.VictoriaLogsErrorAlertJob;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +68,7 @@ public class QuartzSchedulerService {
         scheduler.addJob(jobDetail, true);
 
         TriggerKey triggerKey = buildTriggerKey(group.getId());
-        CronTrigger trigger = buildTrigger(group, triggerKey);
+        SimpleTrigger trigger = buildTrigger(group, triggerKey);
         if (scheduler.checkExists(triggerKey)) {
             scheduler.rescheduleJob(triggerKey, trigger);
             log.info("Rescheduled notification group [{}]", group.getId());
@@ -85,14 +85,17 @@ public class QuartzSchedulerService {
                 .withIdentity(buildJobKey(group.getId()))
                 .usingJobData(jobDataMap)
                 .storeDurably()
+                .requestRecovery()
                 .build();
     }
 
-    private CronTrigger buildTrigger(NotificationGroup group, TriggerKey triggerKey) {
+    private SimpleTrigger buildTrigger(NotificationGroup group, TriggerKey triggerKey) {
         return TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey)
                 .forJob(buildJobKey(group.getId()))
-                .withSchedule(CronScheduleBuilder.cronSchedule(group.getCronExpression()))
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                        .withIntervalInMinutes(group.getTimeFrame())
+                        .repeatForever())
                 .build();
     }
 

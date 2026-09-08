@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.NotificationChannelType;
-import logs.api.validation.ValidCronExpression;
 import lombok.Data;
 
 import javax.validation.constraints.Min;
@@ -38,8 +37,4 @@ public class UpdateNotificationGroupForm {
     @Min(value = 1, message = "timeFrame must be at least 1")
     @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer timeFrame;
-
-    @ValidCronExpression
-    @Schema(name = "cronExpression", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String cronExpression;
 }
