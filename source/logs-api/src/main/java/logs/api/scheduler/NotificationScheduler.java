@@ -36,9 +36,9 @@ public class NotificationScheduler {
     @Scheduled(fixedDelay = 60000, zone = "UTC")
     public void sendPendingNotifications() {
         Notification telegramNotification = notificationRepository
-                .findFirstByNotificationGroupType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
+                .findFirstByNotificationGroupNotificationChannelType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
         Notification slackNotification = notificationRepository
-                .findFirstByNotificationGroupType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_SLACK);
+                .findFirstByNotificationGroupNotificationChannelType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_SLACK);
 
         List<Notification> notifications = new ArrayList<>();
         if (telegramNotification != null) notifications.add(telegramNotification);
@@ -48,8 +48,8 @@ public class NotificationScheduler {
         for (Notification notification : notifications) {
             NotificationGroup group = notification.getNotificationGroup();
             if (group == null) continue;
-            SettingNotificationChannelDto setting = notificationService.parseChannelSetting(group.getChannelSetting());
-            sendMessage(group.getType(), setting.getToken(), setting.getChannel(), notification.getMessage());
+            SettingNotificationChannelDto setting = notificationService.parseChannelSetting(group.getNotificationChannel().getChannelSetting());
+            sendMessage(group.getNotificationChannel().getType(), setting.getToken(), setting.getChannel(), notification.getMessage());
         }
         notificationRepository.deleteAll(notifications);
     }

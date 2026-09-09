@@ -53,6 +53,11 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     private void checkErrorRateAndAlert(NotificationGroup activeGroup) {
+        if (activeGroup.getNotificationChannel() == null) {
+            log.warn("Active notification group [{}] has no notification channel configured, skip VictoriaLogs error check", activeGroup.getName());
+            return;
+        }
+
         List<NotificationQuery> notificationQueries = notificationQueryRepository.findAllByNotificationGroupId(activeGroup.getId());
         if (notificationQueries.isEmpty()) {
             log.debug("Active notification group [{}] has no active notification query, skip VictoriaLogs error check", activeGroup.getName());
@@ -88,10 +93,10 @@ public class VictoriaLogsErrorAlertJob implements Job {
         Collections.sort(apps);
 
         String title = "🚨 Cảnh báo hệ thống";
-        int budget = messageBudget(activeGroup.getType()) - title.length() - 1;
+        int budget = messageBudget(activeGroup.getNotificationChannel().getType()) - title.length() - 1;
         if (budget <= 0) {
             log.error("Message limit for channel type [{}] is too small for title [{}], skip creating notification",
-                    activeGroup.getType(), title);
+                    activeGroup.getNotificationChannel().getType(), title);
             return;
         }
 

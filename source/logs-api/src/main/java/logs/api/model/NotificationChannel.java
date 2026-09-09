@@ -8,24 +8,21 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = DatabaseConstant.PREFIX_TABLE + "notification_group")
+@Table(name = DatabaseConstant.PREFIX_TABLE + "notification_channel")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class NotificationGroup extends Auditable<String> {
+public class NotificationChannel extends Auditable<String> {
     private String name;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "notification_channel_id")
-    private NotificationChannel notificationChannel;
+    @Column(columnDefinition = "longtext")
+    private String channelSetting;
 
-    private Integer timeFrame; // minute
+    private Integer type; // 0: telegram, 1: slack
 }

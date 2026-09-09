@@ -1,7 +1,8 @@
 package logs.api.form.notificationGroup;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
-import logs.api.validation.NotificationChannelType;
+import logs.api.form.StringToLongDeserializer;
 import lombok.Data;
 
 import javax.validation.constraints.Min;
@@ -19,12 +20,10 @@ public class CreateNotificationGroupForm {
     @Schema(name = "description", requiredMode = Schema.RequiredMode.REQUIRED)
     private String description;
 
-    @Schema(name = "channelSetting")
-    private String channelSetting;
-
-    @NotificationChannelType(allowNull = true)
-    @Schema(name = "type")
-    private Integer type;
+    @NotNull(message = "notificationChannelId cannot be null")
+    @JsonDeserialize(using = StringToLongDeserializer.class)
+    @Schema(name = "notificationChannelId", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Long notificationChannelId;
 
     @NotNull(message = "timeFrame cannot be null")
     @Min(value = 1, message = "timeFrame must be at least 1")

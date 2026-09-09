@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long>, JpaSpecificationExecutor<Notification> {
 
-    Notification findFirstByNotificationGroupType(Integer type);
+    Notification findFirstByNotificationGroupNotificationChannelType(Integer type);
 
     @Modifying
     @Transactional

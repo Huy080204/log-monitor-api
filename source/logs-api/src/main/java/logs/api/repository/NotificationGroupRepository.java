@@ -11,4 +11,5 @@ public interface NotificationGroupRepository extends JpaRepository<NotificationG
     boolean existsByName(String name);
     List<NotificationGroup> findAllByStatus(Integer status);
     Optional<NotificationGroup> findByIdAndStatus(Long id, Integer status);
+    boolean existsByNotificationChannelId(Long notificationChannelId);
 }

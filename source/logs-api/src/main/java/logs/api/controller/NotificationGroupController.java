@@ -5,19 +5,19 @@ import logs.api.dto.ApiMessageDto;
 import logs.api.dto.ErrorCode;
 import logs.api.dto.ResponseListDto;
 import logs.api.dto.notificationGroup.NotificationGroupDto;
-import logs.api.dto.setting.SettingNotificationChannelDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
 import logs.api.form.notificationGroup.ChangeNotificationGroupStatusForm;
 import logs.api.form.notificationGroup.CreateNotificationGroupForm;
 import logs.api.form.notificationGroup.UpdateNotificationGroupForm;
 import logs.api.mapper.NotificationGroupMapper;
+import logs.api.model.NotificationChannel;
 import logs.api.model.NotificationGroup;
 import logs.api.model.criteria.NotificationGroupCriteria;
+import logs.api.repository.NotificationChannelRepository;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
-import logs.api.service.NotificationService;
 import logs.api.service.QuartzSchedulerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,13 +55,13 @@ public class NotificationGroupController extends ABasicController {
     private NotificationGroupMapper notificationGroupMapper;
 
     @Autowired
+    private NotificationChannelRepository notificationChannelRepository;
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
     @Autowired
     private NotificationQueryRepository notificationQueryRepository;
-
-    @Autowired
-    private NotificationService notificationService;
 
     @Autowired
     private QuartzSchedulerService quartzSchedulerService;
@@ -98,11 +98,11 @@ public class NotificationGroupController extends ABasicController {
             throw new BadRequestException("Notification group name existed", ErrorCode.NOTIFICATION_GROUP_ERROR_NAME_EXISTED);
         }
 
+        NotificationChannel notificationChannel = notificationChannelRepository.findById(createNotificationGroupForm.getNotificationChannelId())
+                .orElseThrow(() -> new NotFoundException("Not found notification channel", ErrorCode.NOTIFICATION_CHANNEL_ERROR_NOT_FOUND));
+
         NotificationGroup notificationGroup = notificationGroupMapper.fromFormToEntity(createNotificationGroupForm);
-        if (createNotificationGroupForm.getType() == null) {
-            SettingNotificationChannelDto groupSetting = notificationService.parseChannelSetting(notificationGroup.getChannelSetting());
-            notificationGroup.setType(groupSetting.getType());
-        }
+        notificationGroup.setNotificationChannel(notificationChannel);
         notificationGroup.setStatus(BaseConstant.STATUS_PENDING);
         notificationGroupRepository.save(notificationGroup);
         return makeSuccessResponse(notificationGroupMapper.fromEntityToNotificationGroupIdDto(notificationGroup), "Create notification group success");
@@ -120,14 +120,14 @@ public class NotificationGroupController extends ABasicController {
             throw new BadRequestException("Notification group name existed", ErrorCode.NOTIFICATION_GROUP_ERROR_NAME_EXISTED);
         }
 
+        NotificationChannel notificationChannel = notificationChannelRepository.findById(updateNotificationGroupForm.getNotificationChannelId())
+                .orElseThrow(() -> new NotFoundException("Not found notification channel", ErrorCode.NOTIFICATION_CHANNEL_ERROR_NOT_FOUND));
+
         boolean wasActive = BaseConstant.STATUS_ACTIVE.equals(notificationGroup.getStatus());
         Integer oldTimeFrame = notificationGroup.getTimeFrame();
 
         notificationGroupMapper.updateEntityFromForm(updateNotificationGroupForm, notificationGroup);
-        if (updateNotificationGroupForm.getType() == null) {
-            SettingNotificationChannelDto groupSetting = notificationService.parseChannelSetting(notificationGroup.getChannelSetting());
-            notificationGroup.setType(groupSetting.getType());
-        }
+        notificationGroup.setNotificationChannel(notificationChannel);
         notificationGroupRepository.save(notificationGroup);
 
         boolean scheduleChanged = !Objects.equals(oldTimeFrame, notificationGroup.getTimeFrame());
