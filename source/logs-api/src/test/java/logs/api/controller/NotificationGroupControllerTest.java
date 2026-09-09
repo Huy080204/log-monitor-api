@@ -4,19 +4,21 @@ import logs.api.constant.BaseConstant;
 import logs.api.dto.ApiMessageDto;
 import logs.api.dto.ErrorCode;
 import logs.api.dto.ResponseListDto;
+import logs.api.dto.notificationChannel.NotificationChannelDto;
 import logs.api.dto.notificationGroup.NotificationGroupDto;
-import logs.api.dto.setting.SettingNotificationChannelDto;
 import logs.api.exception.BadRequestException;
 import logs.api.exception.NotFoundException;
 import logs.api.form.notificationGroup.CreateNotificationGroupForm;
 import logs.api.form.notificationGroup.UpdateNotificationGroupForm;
 import logs.api.mapper.NotificationGroupMapper;
+import logs.api.model.NotificationChannel;
 import logs.api.model.NotificationGroup;
 import logs.api.model.criteria.NotificationGroupCriteria;
+import logs.api.repository.NotificationChannelRepository;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
-import logs.api.service.NotificationService;
+import logs.api.service.QuartzSchedulerService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -38,7 +40,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,7 +55,9 @@ class NotificationGroupControllerTest {
     @Mock
     private NotificationQueryRepository notificationQueryRepository;
     @Mock
-    private NotificationService notificationService;
+    private NotificationChannelRepository notificationChannelRepository;
+    @Mock
+    private QuartzSchedulerService quartzSchedulerService;
     @InjectMocks
     private NotificationGroupController controller;
 
@@ -73,6 +76,10 @@ class NotificationGroupControllerTest {
     void shouldReturnNotificationGroupDtoWhenGetIdExists() {
         NotificationGroup entity = new NotificationGroup();
         NotificationGroupDto dto = new NotificationGroupDto();
+        NotificationChannelDto channelDto = new NotificationChannelDto();
+        channelDto.setId(5L);
+        channelDto.setName("Slack Alerts");
+        dto.setNotificationChannel(channelDto);
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(notificationGroupMapper.fromEntityToNotificationGroupDto(entity)).thenReturn(dto);
 
@@ -81,6 +88,8 @@ class NotificationGroupControllerTest {
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isSameAs(dto);
         assertThat(result.getMessage()).isEqualTo("Get notification group success");
+        assertThat(result.getData().getNotificationChannel().getId()).isEqualTo(5L);
+        assertThat(result.getData().getNotificationChannel().getName()).isEqualTo("Slack Alerts");
     }
 
     @Test
@@ -126,48 +135,6 @@ class NotificationGroupControllerTest {
     }
 
     @Test
-    void shouldDeriveTypeFromChannelSettingWhenCreateFormTypeIsNull() {
-        CreateNotificationGroupForm form = new CreateNotificationGroupForm();
-        form.setName("Team Alerts");
-        form.setChannelSetting("{\"type\":1,\"channel\":\"#alerts\"}");
-        form.setType(null);
-        NotificationGroup entity = new NotificationGroup();
-        entity.setChannelSetting(form.getChannelSetting());
-        SettingNotificationChannelDto parsed = new SettingNotificationChannelDto();
-        parsed.setType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_SLACK);
-        NotificationGroupDto idDto = new NotificationGroupDto();
-        when(notificationGroupRepository.existsByName("Team Alerts")).thenReturn(false);
-        when(notificationGroupMapper.fromFormToEntity(form)).thenReturn(entity);
-        when(notificationService.parseChannelSetting(entity.getChannelSetting())).thenReturn(parsed);
-        when(notificationGroupMapper.fromEntityToNotificationGroupIdDto(entity)).thenReturn(idDto);
-
-        ApiMessageDto<NotificationGroupDto> result = controller.create(form, bindingResult);
-
-        assertThat(entity.getType()).isEqualTo(BaseConstant.NOTIFICATION_CHANNEL_TYPE_SLACK);
-        assertThat(entity.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
-        assertThat(result.getData()).isSameAs(idDto);
-        assertThat(result.getMessage()).isEqualTo("Create notification group success");
-        verify(notificationGroupRepository).save(entity);
-    }
-
-    @Test
-    void shouldKeepFormTypeWhenCreateFormTypeIsProvided() {
-        CreateNotificationGroupForm form = new CreateNotificationGroupForm();
-        form.setName("Team Alerts");
-        form.setType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
-        NotificationGroup entity = new NotificationGroup();
-        entity.setType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
-        when(notificationGroupRepository.existsByName("Team Alerts")).thenReturn(false);
-        when(notificationGroupMapper.fromFormToEntity(form)).thenReturn(entity);
-        when(notificationGroupMapper.fromEntityToNotificationGroupIdDto(entity)).thenReturn(new NotificationGroupDto());
-
-        controller.create(form, bindingResult);
-
-        assertThat(entity.getType()).isEqualTo(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
-        verify(notificationService, times(0)).parseChannelSetting(any());
-    }
-
-    @Test
     void shouldThrowNotFoundWhenUpdateIdDoesNotExist() {
         UpdateNotificationGroupForm form = new UpdateNotificationGroupForm();
         form.setId(1L);
@@ -193,29 +160,6 @@ class NotificationGroupControllerTest {
         assertThatThrownBy(() -> controller.update(form, bindingResult))
                 .isInstanceOf(BadRequestException.class)
                 .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_NAME_EXISTED);
-    }
-
-    @Test
-    void shouldDeriveTypeFromChannelSettingWhenUpdateFormTypeIsNull() {
-        UpdateNotificationGroupForm form = new UpdateNotificationGroupForm();
-        form.setId(1L);
-        form.setName("Old Name");
-        form.setType(null);
-        NotificationGroup entity = new NotificationGroup();
-        entity.setId(1L);
-        entity.setName("Old Name");
-        entity.setChannelSetting("{\"type\":0}");
-        SettingNotificationChannelDto parsed = new SettingNotificationChannelDto();
-        parsed.setType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(notificationService.parseChannelSetting(entity.getChannelSetting())).thenReturn(parsed);
-
-        ApiMessageDto<Void> result = controller.update(form, bindingResult);
-
-        assertThat(entity.getType()).isEqualTo(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
-        assertThat(result.getResult()).isTrue();
-        assertThat(result.getMessage()).isEqualTo("Update notification group success");
-        verify(notificationGroupRepository).save(entity);
     }
 
     @Test
@@ -254,6 +198,74 @@ class NotificationGroupControllerTest {
         inOrder.verify(notificationRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationQueryRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationGroupRepository).delete(entity);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenCreateNotificationChannelIdDoesNotExist() {
+        CreateNotificationGroupForm form = new CreateNotificationGroupForm();
+        form.setName("Team Alerts");
+        form.setNotificationChannelId(99L);
+        when(notificationChannelRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.create(form, bindingResult))
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_CHANNEL_ERROR_NOT_FOUND);
+    }
+
+    @Test
+    void shouldSetNotificationChannelWhenCreateNotificationChannelIdExists() {
+        CreateNotificationGroupForm form = new CreateNotificationGroupForm();
+        form.setName("Team Alerts");
+        form.setNotificationChannelId(5L);
+        NotificationChannel channel = new NotificationChannel();
+        channel.setId(5L);
+        NotificationGroup entity = new NotificationGroup();
+        when(notificationGroupRepository.existsByName("Team Alerts")).thenReturn(false);
+        when(notificationChannelRepository.findById(5L)).thenReturn(Optional.of(channel));
+        when(notificationGroupMapper.fromFormToEntity(form)).thenReturn(entity);
+        when(notificationGroupMapper.fromEntityToNotificationGroupIdDto(entity)).thenReturn(new NotificationGroupDto());
+
+        controller.create(form, bindingResult);
+
+        assertThat(entity.getNotificationChannel()).isSameAs(channel);
+        verify(notificationGroupRepository).save(entity);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenUpdateNotificationChannelIdDoesNotExist() {
+        UpdateNotificationGroupForm form = new UpdateNotificationGroupForm();
+        form.setId(1L);
+        form.setName("Team Alerts");
+        form.setNotificationChannelId(99L);
+        NotificationGroup entity = new NotificationGroup();
+        entity.setId(1L);
+        entity.setName("Team Alerts");
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(notificationChannelRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.update(form, bindingResult))
+                .isInstanceOf(NotFoundException.class)
+                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_CHANNEL_ERROR_NOT_FOUND);
+    }
+
+    @Test
+    void shouldSetNotificationChannelWhenUpdateNotificationChannelIdExists() {
+        UpdateNotificationGroupForm form = new UpdateNotificationGroupForm();
+        form.setId(1L);
+        form.setName("Old Name");
+        form.setNotificationChannelId(5L);
+        NotificationGroup entity = new NotificationGroup();
+        entity.setId(1L);
+        entity.setName("Old Name");
+        NotificationChannel channel = new NotificationChannel();
+        channel.setId(5L);
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(notificationChannelRepository.findById(5L)).thenReturn(Optional.of(channel));
+
+        controller.update(form, bindingResult);
+
+        assertThat(entity.getNotificationChannel()).isSameAs(channel);
+        verify(notificationGroupRepository).save(entity);
     }
 
 }

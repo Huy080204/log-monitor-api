@@ -16,14 +16,14 @@ import org.mapstruct.ReportingPolicy;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        uses = {NotificationChannelMapper.class})
 public interface NotificationGroupMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "channelSetting", target = "channelSetting")
-    @Mapping(source = "type", target = "type")
+    @Mapping(source = "notificationChannel", target = "notificationChannel", qualifiedByName = "fromEntityToSimpleNotificationChannel")
     @Mapping(source = "timeFrame", target = "timeFrame")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
@@ -37,8 +37,6 @@ public interface NotificationGroupMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
-    @Mapping(source = "description", target = "description")
-    @Mapping(source = "type", target = "type")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToNotificationGroupDtoAutoComplete")
     NotificationGroupDto fromEntityToNotificationGroupDtoAutoComplete(NotificationGroup notificationGroup);
@@ -48,8 +46,6 @@ public interface NotificationGroupMapper {
 
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "channelSetting", target = "channelSetting")
-    @Mapping(source = "type", target = "type")
     @Mapping(source = "timeFrame", target = "timeFrame")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromCreateFormToEntity")
@@ -57,8 +53,6 @@ public interface NotificationGroupMapper {
 
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "channelSetting", target = "channelSetting")
-    @Mapping(source = "type", target = "type")
     @Mapping(source = "timeFrame", target = "timeFrame")
     @BeanMapping(ignoreByDefault = true)
     @Named("updateEntityFromForm")

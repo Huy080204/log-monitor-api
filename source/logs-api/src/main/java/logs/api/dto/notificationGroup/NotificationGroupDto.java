@@ -2,6 +2,7 @@ package logs.api.dto.notificationGroup;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.dto.ABasicAdminDto;
+import logs.api.dto.notificationChannel.NotificationChannelDto;
 import lombok.Data;
 
 @Data
@@ -11,10 +12,8 @@ public class NotificationGroupDto extends ABasicAdminDto {
     private String name;
     @Schema(name = "description")
     private String description;
-    @Schema(name = "channelSetting")
-    private String channelSetting;
-    @Schema(name = "type")
-    private Integer type;
+    @Schema(name = "notificationChannel")
+    private NotificationChannelDto notificationChannel;
     @Schema(name = "timeFrame")
     private Integer timeFrame;
 }

@@ -31,6 +31,13 @@ public class ErrorCode {
     public static final String NOTIFICATION_GROUP_ERROR_DELETE_ACTIVE = "ERROR-NOTIFICATION-GROUP-0002";
 
     /**
+     * Starting error code NotificationChannel
+     */
+    public static final String NOTIFICATION_CHANNEL_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-CHANNEL-0000";
+    public static final String NOTIFICATION_CHANNEL_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-CHANNEL-0001";
+    public static final String NOTIFICATION_CHANNEL_ERROR_IN_USE = "ERROR-NOTIFICATION-CHANNEL-0002";
+
+    /**
      * Starting error code Notification
      */
     public static final String NOTIFICATION_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-0000";
