@@ -39,14 +39,14 @@ public class VictoriaLogsErrorAlertJob implements Job {
     public void execute(JobExecutionContext context) {
         Long groupId = (Long) context.getJobDetail().getJobDataMap().get("groupId");
         try {
-            log.info("Start checkErrorRateAndAlert for group [{}], recovering: {}", groupId, context.isRecovering());
             NotificationGroup activeGroup = notificationGroupRepository.findByIdAndStatus(groupId, BaseConstant.STATUS_ACTIVE).orElse(null);
             if (activeGroup == null) {
                 log.debug("Notification group [{}] not found or not active, skip VictoriaLogs error check", groupId);
                 return;
             }
+            log.info("Start checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
             checkErrorRateAndAlert(activeGroup);
-            log.info("Finished checkErrorRateAndAlert for group [{}]", groupId);
+            log.info("Finished checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
         } catch (Exception e) {
             log.error("Error occurred in checkErrorRateAndAlert job", e);
         }

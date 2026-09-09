@@ -85,7 +85,6 @@ public class QuartzSchedulerService {
                 .withIdentity(buildJobKey(group.getId()))
                 .usingJobData(jobDataMap)
                 .storeDurably()
-                .requestRecovery()
                 .build();
     }
 
