@@ -39,7 +39,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
     public void execute(JobExecutionContext context) {
         Long groupId = (Long) context.getJobDetail().getJobDataMap().get("groupId");
         try {
-            log.info("Start checkErrorRateAndAlert for group [{}], recovering: {}", groupId, context.isRecovering());
+            log.info("Start checkErrorRateAndAlert for group [{}]", groupId);
             NotificationGroup activeGroup = notificationGroupRepository.findByIdAndStatus(groupId, BaseConstant.STATUS_ACTIVE).orElse(null);
             if (activeGroup == null) {
                 log.debug("Notification group [{}] not found or not active, skip VictoriaLogs error check", groupId);
