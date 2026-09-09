@@ -155,11 +155,11 @@ public class NotificationGroupController extends ABasicController {
         return makeSuccessResponse("Delete notification group success");
     }
 
-    @PutMapping(value = "/change-state/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/update-status", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOG_U')")
     @Transactional
-    public ApiMessageDto<Void> changeState(@PathVariable Long id, @Valid @RequestBody ChangeNotificationGroupStatusForm form) {
-        NotificationGroup notificationGroup = notificationGroupRepository.findById(id)
+    public ApiMessageDto<Void> changeState(@Valid @RequestBody ChangeNotificationGroupStatusForm form) {
+        NotificationGroup notificationGroup = notificationGroupRepository.findById(form.getId())
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
         notificationGroup.setStatus(form.getStatus());
