@@ -45,8 +45,9 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 log.debug("Notification group [{}] not found or not active, skip VictoriaLogs error check", groupId);
                 return;
             }
+            log.info("Start checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
             checkErrorRateAndAlert(activeGroup);
-            log.info("Finished checkErrorRateAndAlert for group [{}]", groupId);
+            log.info("Finished checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
         } catch (Exception e) {
             log.error("Error occurred in checkErrorRateAndAlert job", e);
         }
