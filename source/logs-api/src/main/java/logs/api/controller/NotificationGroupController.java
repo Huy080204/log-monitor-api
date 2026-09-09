@@ -155,7 +155,7 @@ public class NotificationGroupController extends ABasicController {
         return makeSuccessResponse("Delete notification group success");
     }
 
-    @PutMapping(value = "/change-state", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/update-status", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOG_U')")
     @Transactional
     public ApiMessageDto<Void> changeState(@Valid @RequestBody ChangeNotificationGroupStatusForm form) {
