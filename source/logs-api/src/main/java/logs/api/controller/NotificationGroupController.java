@@ -152,10 +152,6 @@ public class NotificationGroupController extends ABasicController {
         NotificationGroup notificationGroup = notificationGroupRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_NOT_FOUND));
 
-        if (BaseConstant.STATUS_ACTIVE.equals(notificationGroup.getStatus())) {
-            throw new BadRequestException("Cannot delete an active notification group", ErrorCode.NOTIFICATION_GROUP_ERROR_DELETE_ACTIVE);
-        }
-
         notificationRepository.deleteAllByNotificationGroupId(id);
         if (BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD.equals(notificationGroup.getCheckType())) {
             notificationQueryRepository.deleteAllByNotificationGroupId(id);

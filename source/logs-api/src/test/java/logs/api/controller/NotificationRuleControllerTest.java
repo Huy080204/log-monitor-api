@@ -385,7 +385,7 @@ class NotificationRuleControllerTest {
 
         ArgumentCaptor<List<NotificationRuleItem>> itemsCaptor = ArgumentCaptor.forClass(List.class);
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Collection<NotificationRuleItem>> deletedCaptor = ArgumentCaptor.forClass(Collection.class);
+        ArgumentCaptor<Collection<Long>> deletedIdsCaptor = ArgumentCaptor.forClass(Collection.class);
 
         ApiMessageDto<Void> result = controller.update(form, bindingResult);
 
@@ -394,12 +394,10 @@ class NotificationRuleControllerTest {
         assertThat(existingRule.getName()).isEqualTo("new-name");
         verify(notificationRuleRepository).save(existingRule);
 
-        InOrder inOrder = inOrder(notificationRuleItemRepository);
-        inOrder.verify(notificationRuleItemRepository).deleteAll(deletedCaptor.capture());
-        inOrder.verify(notificationRuleItemRepository).saveAll(itemsCaptor.capture());
+        verify(notificationRuleItemRepository).deleteAllByIdIn(deletedIdsCaptor.capture());
+        assertThat(deletedIdsCaptor.getValue()).containsExactly(402L);
 
-        assertThat(deletedCaptor.getValue()).containsExactly(leftoverItem);
-
+        verify(notificationRuleItemRepository).saveAll(itemsCaptor.capture());
         List<NotificationRuleItem> savedItems = itemsCaptor.getValue();
         assertThat(savedItems).hasSize(2);
         assertThat(savedItems.get(0)).isSameAs(keptItem);
@@ -434,7 +432,7 @@ class NotificationRuleControllerTest {
 
         controller.update(form, bindingResult);
 
-        verify(notificationRuleItemRepository, never()).deleteAll(any());
+        verify(notificationRuleItemRepository, never()).deleteAllByIdIn(any());
         verify(notificationRuleItemRepository).saveAll(anyList());
     }
 

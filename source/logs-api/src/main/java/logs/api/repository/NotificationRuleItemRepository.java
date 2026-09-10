@@ -30,6 +30,11 @@ public interface NotificationRuleItemRepository extends JpaRepository<Notificati
 
     @Modifying
     @Transactional
+    @Query("DELETE FROM NotificationRuleItem nri WHERE nri.id IN :ids")
+    void deleteAllByIdIn(@Param("ids") Collection<Long> ids);
+
+    @Modifying
+    @Transactional
     @Query("DELETE FROM NotificationRuleItem nri WHERE nri.queryTemplate.id = :queryTemplateId")
     void deleteAllByQueryTemplateId(@Param("queryTemplateId") Long queryTemplateId);
 
