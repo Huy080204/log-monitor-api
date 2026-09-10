@@ -148,23 +148,19 @@ public class VictoriaLogsErrorAlertJob implements Job {
             return;
         }
 
-        Map<String, List<String>> alertingRules = new LinkedHashMap<>();
+        List<Notification> notifications = new ArrayList<>();
         for (NotificationRule rule : usableRules) {
-            if (shouldAlert(rule, itemsByRuleId.get(rule.getId()), rowByApp)) {
-                alertingRules.put(rule.getName(), Collections.emptyList());
+            List<String> lines = buildAlertLines(rule, itemsByRuleId.get(rule.getId()), rowByApp);
+            if (lines.isEmpty()) {
+                continue;
             }
-        }
-        if (alertingRules.isEmpty()) {
-            log.debug("No notification rule of group [{}] met its alert condition", activeGroup.getName());
-            return;
+            notifications.addAll(buildNotifications(activeGroup, Collections.singletonList(rule.getName()),
+                    Collections.singletonMap(rule.getName(), lines), budget));
         }
 
-        List<Notification> notifications = buildNotifications(activeGroup,
-                new ArrayList<>(alertingRules.keySet()), alertingRules, budget);
         if (!notifications.isEmpty()) {
             notificationRepository.saveAll(notifications);
-            log.info("Successfully created {} comparison notifications for {} alerting rule(s)",
-                    notifications.size(), alertingRules.size());
+            log.info("Successfully created {} comparison notifications", notifications.size());
         }
     }
 
@@ -244,18 +240,20 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     // Chỉ cần MỘT cặp khớp điều kiện là gửi thông báo
-    private boolean shouldAlert(NotificationRule rule, List<NotificationRuleItem> items,
-                                Map<String, VictoriaLogsStatsDto> rowByApp) {
+    private List<String> buildAlertLines(NotificationRule rule, List<NotificationRuleItem> items,
+                                         Map<String, VictoriaLogsStatsDto> rowByApp) {
         int[] counts = resolveCounts(items, rowByApp);
         // Không có log nào trong cửa sổ: mọi count đều 0 nên EQ/GTE/LTE sẽ khớp và bắn cảnh báo giả
         // mỗi chu kỳ. Rule chỉ có MỘT SỐ vế bằng 0 thì vẫn xét — đó là ca "app ngừng ghi log" cần bắt.
         if (isAllZero(counts)) {
             log.debug("Notification rule [{}] has no log in the last window, skip comparison", rule.getName());
-            return false;
+            return Collections.emptyList();
         }
 
         boolean shouldAlert = false;
+        List<String> lines = new ArrayList<>(items.size() - 1);
         for (int i = 1; i < items.size(); i++) {
+            NotificationRuleItem previous = items.get(i - 1);
             NotificationRuleItem current = items.get(i);
             Boolean matched = matches(current.getOperator(), counts[i - 1], counts[i]);
             if (matched == null) {
@@ -266,8 +264,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
             if (matched) {
                 shouldAlert = true;
             }
+            lines.add(String.format("  • `%s / %s`: %d %s `%s / %s`: %d",
+                    previous.getApplication().getName(), previous.getQueryTemplate().getName(), counts[i - 1],
+                    operatorSymbol(current.getOperator()),
+                    current.getApplication().getName(), current.getQueryTemplate().getName(), counts[i]));
         }
-        return shouldAlert;
+        return shouldAlert ? lines : Collections.emptyList();
     }
 
     private boolean isAllZero(int[] counts) {
@@ -308,6 +310,23 @@ public class VictoriaLogsErrorAlertJob implements Job {
             return previousCount <= currentCount;
         }
         return null;
+    }
+
+    private String operatorSymbol(Integer operator) {
+        if (BaseConstant.RULE_ITEM_OPERATOR_EQ.equals(operator)) {
+            return "=";
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_NEQ.equals(operator)) {
+            return "!=";
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_GT.equals(operator)) {
+            return ">";
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_GTE.equals(operator)) {
+            return ">=";
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_LT.equals(operator)) {
+            return "<";
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_LTE.equals(operator)) {
+            return "<=";
+        }
+        return "?";
     }
 
     private int budgetFor(NotificationGroup activeGroup) {
