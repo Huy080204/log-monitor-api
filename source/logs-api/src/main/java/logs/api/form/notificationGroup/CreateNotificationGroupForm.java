@@ -3,6 +3,7 @@ package logs.api.form.notificationGroup;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
+import logs.api.validation.NotificationGroupCheckType;
 import lombok.Data;
 
 import javax.validation.constraints.Min;
@@ -29,4 +30,8 @@ public class CreateNotificationGroupForm {
     @Min(value = 1, message = "timeFrame must be at least 1")
     @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer timeFrame;
+
+    @NotificationGroupCheckType
+    @Schema(name = "checkType", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer checkType;
 }

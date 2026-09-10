@@ -18,6 +18,7 @@ import logs.api.repository.NotificationChannelRepository;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
+import logs.api.repository.NotificationRuleRepository;
 import logs.api.service.QuartzSchedulerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,9 @@ public class NotificationGroupController extends ABasicController {
 
     @Autowired
     private QuartzSchedulerService quartzSchedulerService;
+
+    @Autowired
+    private NotificationRuleRepository notificationRuleRepository;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOG_V')")
@@ -150,6 +154,7 @@ public class NotificationGroupController extends ABasicController {
 
         notificationRepository.deleteAllByNotificationGroupId(id);
         notificationQueryRepository.deleteAllByNotificationGroupId(id);
+        notificationRuleRepository.deleteAllByNotificationGroupId(id);
         notificationGroupRepository.delete(notificationGroup);
         quartzSchedulerService.deleteGroup(id);
         return makeSuccessResponse("Delete notification group success");

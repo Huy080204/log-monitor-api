@@ -1,7 +1,7 @@
 package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import logs.api.model.NotificationGroup;
+import logs.api.model.NotificationRule;
 import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -14,44 +14,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class NotificationGroupCriteria implements Serializable {
+public class NotificationRuleCriteria implements Serializable {
 
     private Long id;
-    private String name;
     private Integer status;
-    private Integer sortDate; // 1: created date asc, 2: created date desc
-    private Integer checkType;
+    private Long notificationGroupId;
+    private String name;
 
     @Schema(hidden = true)
-    public Specification<NotificationGroup> getCriteria() {
-        return new Specification<NotificationGroup>() {
+    public Specification<NotificationRule> getCriteria() {
+        return new Specification<NotificationRule>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Predicate toPredicate(Root<NotificationGroup> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+            public Predicate toPredicate(Root<NotificationRule> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
                 List<Predicate> predicates = new ArrayList<>();
                 if (getId() != null) {
                     predicates.add(cb.equal(root.get("id"), getId()));
-                }
-
-                if (getName() != null && !getName().isEmpty()) {
-                    predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 
                 if (getStatus() != null) {
                     predicates.add(cb.equal(root.get("status"), getStatus()));
                 }
 
-                if (getCheckType() != null) {
-                    predicates.add(cb.equal(root.get("checkType"), getCheckType()));
+                if (getNotificationGroupId() != null) {
+                    predicates.add(cb.equal(root.get("notificationGroup").get("id"), getNotificationGroupId()));
                 }
 
-                if (getSortDate() != null) {
-                    if (getSortDate().equals(1)) {
-                        query.orderBy(cb.asc(root.get("createdDate")));
-                    } else {
-                        query.orderBy(cb.desc(root.get("createdDate")));
-                    }
+                if (getName() != null && !getName().isEmpty()) {
+                    predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }

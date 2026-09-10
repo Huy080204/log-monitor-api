@@ -13,21 +13,17 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = DatabaseConstant.PREFIX_TABLE + "notification_group")
+@Table(name = DatabaseConstant.PREFIX_TABLE + "notification_rule")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class NotificationGroup extends Auditable<String> {
+public class NotificationRule extends Auditable<String> {
     private String name;
 
     @Column(columnDefinition = "text")
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "notification_channel_id")
-    private NotificationChannel notificationChannel;
-
-    private Integer timeFrame; // minute
-
-    private Integer checkType; // 1: threshold, 2: comparison
+    @JoinColumn(name = "notification_group_id")
+    private NotificationGroup notificationGroup;
 }

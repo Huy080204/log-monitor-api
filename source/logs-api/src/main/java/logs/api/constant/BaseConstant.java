@@ -34,6 +34,10 @@ public class BaseConstant {
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
 
+    // NotificationGroup check type
+    public static final Integer NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD = 1;
+    public static final Integer NOTIFICATION_GROUP_CHECK_TYPE_COMPARISON = 2;
+
     private BaseConstant() {
         throw new IllegalStateException("Utility class");
     }

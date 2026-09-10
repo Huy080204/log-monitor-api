@@ -29,6 +29,14 @@ public class ErrorCode {
     public static final String NOTIFICATION_GROUP_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-GROUP-0000";
     public static final String NOTIFICATION_GROUP_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-GROUP-0001";
     public static final String NOTIFICATION_GROUP_ERROR_DELETE_ACTIVE = "ERROR-NOTIFICATION-GROUP-0002";
+    public static final String NOTIFICATION_GROUP_ERROR_CHECK_TYPE_MISMATCH = "ERROR-NOTIFICATION-GROUP-0003";
+
+    /**
+     * Starting error code NotificationRule
+     */
+    public static final String NOTIFICATION_RULE_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-RULE-0000";
+    public static final String NOTIFICATION_RULE_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-RULE-0001";
+
 
     /**
      * Starting error code NotificationChannel

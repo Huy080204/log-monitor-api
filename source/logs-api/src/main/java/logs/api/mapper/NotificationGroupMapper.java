@@ -25,6 +25,7 @@ public interface NotificationGroupMapper {
     @Mapping(source = "description", target = "description")
     @Mapping(source = "notificationChannel", target = "notificationChannel", qualifiedByName = "fromEntityToSimpleNotificationChannel")
     @Mapping(source = "timeFrame", target = "timeFrame")
+    @Mapping(source = "checkType", target = "checkType")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "modifiedDate", target = "modifiedDate")
@@ -47,6 +48,7 @@ public interface NotificationGroupMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "timeFrame", target = "timeFrame")
+    @Mapping(source = "checkType", target = "checkType")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromCreateFormToEntity")
     NotificationGroup fromFormToEntity(CreateNotificationGroupForm createNotificationGroupForm);
