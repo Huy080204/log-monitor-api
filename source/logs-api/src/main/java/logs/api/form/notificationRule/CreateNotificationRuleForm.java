@@ -6,8 +6,6 @@ import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.RuleItemOperators;
 import lombok.Data;
 
-import logs.api.constant.BaseConstant;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

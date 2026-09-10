@@ -30,6 +30,7 @@ public class QueryTemplateCriteria implements Serializable {
     private Long ignoreNotificationGroupId;
     private Boolean isGlobal; // null application
     private Boolean includeGlobal; // include null-application
+    private Long requiredId;
 
     @Schema(hidden = true)
     public Specification<QueryTemplate> getCriteria() {
@@ -81,6 +82,12 @@ public class QueryTemplateCriteria implements Serializable {
                         .when(cb.isNull(root.get("application")), root.<Long>get("id"))
                         .otherwise(sortApplicationJoin.<Long>get("id"));
                 query.orderBy(cb.asc(nullApplicationRank), cb.desc(idSortKey));
+
+                if (getRequiredId() != null) {
+                    query.orderBy(cb.desc(cb.selectCase()
+                            .when(cb.equal(root.get("id"), getRequiredId()), 1)
+                            .otherwise(0)));
+                }
 
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }

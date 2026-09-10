@@ -7,14 +7,14 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.List;
 
-public class RuleItemOperatorsValidation implements ConstraintValidator<RuleItemOperators, List<NotificationRuleItemForm>> {
+public class RuleItemOperatorsValidation implements ConstraintValidator<RuleItemOperators, List<? extends NotificationRuleItemForm>> {
 
     @Override
     public void initialize(RuleItemOperators constraintAnnotation) {
     }
 
     @Override
-    public boolean isValid(List<NotificationRuleItemForm> value, ConstraintValidatorContext context) {
+    public boolean isValid(List<? extends NotificationRuleItemForm> value, ConstraintValidatorContext context) {
         if (value == null || value.isEmpty()) {
             return true;
         }

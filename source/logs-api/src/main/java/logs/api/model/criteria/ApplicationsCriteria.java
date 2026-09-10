@@ -20,6 +20,7 @@ public class ApplicationsCriteria implements Serializable {
     private Long id;
     private Integer status;
     private String name;
+    private Long requiredId;
 
     @Schema(hidden = true)
     public Specification<Applications> getCriteria() {
@@ -40,6 +41,13 @@ public class ApplicationsCriteria implements Serializable {
                 if (!StringUtils.isEmpty(getName())) {
                     predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
+
+                if (getRequiredId() != null) {
+                    query.orderBy(cb.desc(cb.selectCase()
+                            .when(cb.equal(root.get("id"), getRequiredId()), 1)
+                            .otherwise(0)));
+                }
+
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         };
