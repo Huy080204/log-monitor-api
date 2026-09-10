@@ -18,7 +18,7 @@ public interface NotificationRuleItemRepository extends JpaRepository<Notificati
             + "JOIN FETCH i.notificationRule nr "
             + "JOIN FETCH i.application "
             + "JOIN FETCH i.queryTemplate qt "
-            + "JOIN FETCH qt.application "
+            + "LEFT JOIN FETCH qt.application "
             + "WHERE nr.id IN :notificationRuleIds "
             + "ORDER BY nr.id ASC, i.ordering ASC")
     List<NotificationRuleItem> findAllByNotificationRuleIdInFetchingRefs(@Param("notificationRuleIds") Collection<Long> notificationRuleIds);
