@@ -18,8 +18,8 @@ import java.util.List;
 public interface NotificationRuleItemMapper {
 
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationsDto")
-    @Mapping(source = "queryTemplate", target = "queryTemplate", qualifiedByName = "fromEntityToQueryTemplateDto")
+    @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationShortDto")
+    @Mapping(source = "queryTemplate", target = "queryTemplate", qualifiedByName = "fromEntityToQueryTemplateShortDto")
     @Mapping(source = "ordering", target = "ordering")
     @Mapping(source = "operator", target = "operator")
     @Mapping(source = "modifiedDate", target = "modifiedDate")

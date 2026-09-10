@@ -47,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -96,6 +97,17 @@ public class NotificationRuleController extends ABasicController {
         Page<NotificationRule> page = notificationRuleRepository.findAll(notificationRuleCriteria.getCriteria(), pageable);
         ResponseListDto<List<NotificationRuleDto>> responseListDto =
                 makeResponseListDto(page, notificationRuleMapper::fromEntityToNotificationRuleDtoList);
+
+        List<Long> notificationRuleIds = page.getContent().stream().map(NotificationRule::getId).collect(Collectors.toList());
+        if (!notificationRuleIds.isEmpty()) {
+            Map<Long, List<NotificationRuleItem>> itemsByRuleId = notificationRuleItemRepository.findAllByNotificationRuleIdInFetchingRefs(notificationRuleIds).stream()
+                    .collect(Collectors.groupingBy(notificationRuleItem -> notificationRuleItem.getNotificationRule().getId()));
+            for (NotificationRuleDto notificationRuleDto : responseListDto.getContent()) {
+                List<NotificationRuleItem> items = itemsByRuleId.getOrDefault(notificationRuleDto.getId(), Collections.emptyList());
+                notificationRuleDto.setItems(notificationRuleItemMapper.fromEntityToNotificationRuleItemDtoList(items));
+            }
+        }
+
         return makeSuccessResponse(responseListDto, "Get list success");
     }
 
