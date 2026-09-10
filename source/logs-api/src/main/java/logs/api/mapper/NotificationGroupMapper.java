@@ -43,6 +43,14 @@ public interface NotificationGroupMapper {
     @Named("fromEntityToNotificationGroupDtoAutoComplete")
     NotificationGroupDto fromEntityToNotificationGroupDtoAutoComplete(NotificationGroup notificationGroup);
 
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "timeFrame", target = "timeFrame")
+    @Mapping(source = "filterQuery", target = "filterQuery")
+    @BeanMapping(ignoreByDefault = true)
+    @Named("fromEntityToNotificationGroupSummaryDto")
+    NotificationGroupDto fromEntityToNotificationGroupSummaryDto(NotificationGroup notificationGroup);
+
     @IterableMapping(elementTargetType = NotificationGroupDto.class, qualifiedByName = "fromEntityToNotificationGroupDtoAutoComplete")
     List<NotificationGroupDto> fromEntityListToNotificationGroupDtoAutoCompleteList(List<NotificationGroup> notificationGroups);
 

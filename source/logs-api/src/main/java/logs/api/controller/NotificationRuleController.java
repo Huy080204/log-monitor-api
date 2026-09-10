@@ -100,7 +100,7 @@ public class NotificationRuleController extends ABasicController {
 
         List<Long> notificationRuleIds = page.getContent().stream().map(NotificationRule::getId).collect(Collectors.toList());
         if (!notificationRuleIds.isEmpty()) {
-            Map<Long, List<NotificationRuleItem>> itemsByRuleId = notificationRuleItemRepository.findAllByNotificationRuleIdInFetchingRefs(notificationRuleIds).stream()
+            Map<Long, List<NotificationRuleItem>> itemsByRuleId = notificationRuleItemRepository.findAllByNotificationRuleIdInFetchingAppAndTemplate(notificationRuleIds).stream()
                     .collect(Collectors.groupingBy(notificationRuleItem -> notificationRuleItem.getNotificationRule().getId()));
             for (NotificationRuleDto notificationRuleDto : responseListDto.getContent()) {
                 List<NotificationRuleItem> items = itemsByRuleId.getOrDefault(notificationRuleDto.getId(), Collections.emptyList());

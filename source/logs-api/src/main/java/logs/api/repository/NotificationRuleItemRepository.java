@@ -23,6 +23,14 @@ public interface NotificationRuleItemRepository extends JpaRepository<Notificati
             + "ORDER BY nr.id ASC, i.ordering ASC")
     List<NotificationRuleItem> findAllByNotificationRuleIdInFetchingRefs(@Param("notificationRuleIds") Collection<Long> notificationRuleIds);
 
+    @Query("SELECT i FROM NotificationRuleItem i "
+            + "JOIN i.notificationRule nr "
+            + "JOIN FETCH i.application "
+            + "JOIN FETCH i.queryTemplate "
+            + "WHERE nr.id IN :notificationRuleIds "
+            + "ORDER BY nr.id ASC, i.ordering ASC")
+    List<NotificationRuleItem> findAllByNotificationRuleIdInFetchingAppAndTemplate(@Param("notificationRuleIds") Collection<Long> notificationRuleIds);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM NotificationRuleItem nri WHERE nri.notificationRule.id = :notificationRuleId")
