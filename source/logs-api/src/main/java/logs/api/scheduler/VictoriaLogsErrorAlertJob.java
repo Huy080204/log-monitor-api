@@ -148,7 +148,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
 
         List<Notification> notifications = new ArrayList<>();
         for (NotificationRule rule : usableRules) {
-            List<String> lines = buildViolationLines(rule, itemsByRuleId.get(rule.getId()), rowByApp);
+            List<String> lines = buildAlertLines(rule, itemsByRuleId.get(rule.getId()), rowByApp);
             if (lines.isEmpty()) {
                 continue;
             }
@@ -237,35 +237,34 @@ public class VictoriaLogsErrorAlertJob implements Job {
         return breachLinesByApp;
     }
 
-    private List<String> buildViolationLines(NotificationRule rule, List<NotificationRuleItem> items,
-                                             Map<String, VictoriaLogsStatsDto> rowByApp) {
+    private List<String> buildAlertLines(NotificationRule rule, List<NotificationRuleItem> items,
+                                         Map<String, VictoriaLogsStatsDto> rowByApp) {
         int[] counts = resolveCounts(items, rowByApp);
         if (isAllZero(counts)) {
             log.debug("Notification rule [{}] has no log in the last window, skip comparison", rule.getName());
             return Collections.emptyList();
         }
 
-        boolean violated = false;
+        boolean shouldAlert = false;
         List<String> lines = new ArrayList<>(items.size() - 1);
         for (int i = 1; i < items.size(); i++) {
             NotificationRuleItem previous = items.get(i - 1);
             NotificationRuleItem current = items.get(i);
-            Boolean pass = matches(current.getOperator(), counts[i - 1], counts[i]);
-            if (pass == null) {
+            Boolean matched = matches(current.getOperator(), counts[i - 1], counts[i]);
+            if (matched == null) {
                 log.error("Notification rule [{}] item [{}] has an unsupported operator [{}], skip this pair",
                         rule.getName(), current.getId(), current.getOperator());
                 continue;
             }
-            if (!pass) {
-                violated = true;
+            if (matched) {
+                shouldAlert = true;
             }
-            lines.add(String.format("  • `%s / %s`: %d %s `%s / %s`: %d [%s]",
+            lines.add(String.format("  • `%s / %s`: %d %s `%s / %s`: %d",
                     previous.getApplication().getName(), previous.getQueryTemplate().getName(), counts[i - 1],
                     operatorSymbol(current.getOperator()),
-                    current.getApplication().getName(), current.getQueryTemplate().getName(), counts[i],
-                    pass ? "OK" : "FAIL"));
+                    current.getApplication().getName(), current.getQueryTemplate().getName(), counts[i]));
         }
-        return violated ? lines : Collections.emptyList();
+        return shouldAlert ? lines : Collections.emptyList();
     }
 
     private boolean isAllZero(int[] counts) {
