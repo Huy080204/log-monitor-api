@@ -10,12 +10,14 @@ import lombok.Data;
 public class NotificationGroupDto extends ABasicAdminDto {
     @Schema(name = "name")
     private String name;
+    @Schema(name = "checkType")
+    private Integer checkType;
     @Schema(name = "description")
     private String description;
     @Schema(name = "notificationChannel")
     private NotificationChannelDto notificationChannel;
     @Schema(name = "timeFrame")
     private Integer timeFrame;
-    @Schema(name = "checkType")
-    private Integer checkType;
+    @Schema(name = "filterQuery")
+    private String filterQuery;
 }

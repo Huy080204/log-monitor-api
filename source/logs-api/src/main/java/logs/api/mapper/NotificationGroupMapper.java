@@ -22,10 +22,11 @@ public interface NotificationGroupMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "checkType", target = "checkType")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "notificationChannel", target = "notificationChannel", qualifiedByName = "fromEntityToSimpleNotificationChannel")
     @Mapping(source = "timeFrame", target = "timeFrame")
-    @Mapping(source = "checkType", target = "checkType")
+    @Mapping(source = "filterQuery", target = "filterQuery")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "modifiedDate", target = "modifiedDate")
@@ -46,14 +47,16 @@ public interface NotificationGroupMapper {
     List<NotificationGroupDto> fromEntityListToNotificationGroupDtoAutoCompleteList(List<NotificationGroup> notificationGroups);
 
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "checkType", target = "checkType")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "timeFrame", target = "timeFrame")
-    @Mapping(source = "checkType", target = "checkType")
+    @Mapping(source = "filterQuery", target = "filterQuery")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromCreateFormToEntity")
     NotificationGroup fromFormToEntity(CreateNotificationGroupForm createNotificationGroupForm);
 
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "filterQuery", target = "filterQuery")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "timeFrame", target = "timeFrame")
     @BeanMapping(ignoreByDefault = true)
