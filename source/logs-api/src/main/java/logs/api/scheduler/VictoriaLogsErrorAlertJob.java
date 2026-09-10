@@ -95,7 +95,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
 
         Map<String, VictoriaLogsStatsDto> rowByApp = fetchRowsByApp(activeGroup,
                 enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
-        Map<String, List<String>> breachLinesByApp = collectBreachLines(rowByApp, queryTemplateById,
+        Map<String, List<String>> breachLinesByApp = buildBreachLines(rowByApp, queryTemplateById,
                 enabledTemplateIdsByApp, appNameByVictoriaAppId);
         if (breachLinesByApp.isEmpty()) {
             log.debug("No app crossed any notification query threshold in the last {}m", activeGroup.getTimeFrame());
@@ -111,8 +111,10 @@ public class VictoriaLogsErrorAlertJob implements Job {
         }
 
         List<Notification> notifications = buildNotifications(activeGroup, apps, breachLinesByApp, budget);
-        notificationRepository.saveAll(notifications);
-        log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
+        if (!notifications.isEmpty()) {
+            notificationRepository.saveAll(notifications);
+            log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
+        }
     }
 
     private void checkComparisonAndAlert(NotificationGroup activeGroup) {
@@ -139,7 +141,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
         }
 
         Map<String, VictoriaLogsStatsDto> rowByApp = fetchRowsByApp(activeGroup,
-                collectVictoriaAppIdsByRules(usableRules, itemsByRuleId), collectQueryTemplates(usableRules, itemsByRuleId));
+                collectVictoriaAppIds(usableRules, itemsByRuleId), collectQueryTemplates(usableRules, itemsByRuleId));
 
         int budget = budgetFor(activeGroup);
         if (budget <= 0) {
@@ -172,8 +174,8 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 );
     }
 
-    private Set<String> collectVictoriaAppIdsByRules(List<NotificationRule> usableRules,
-                                                     Map<Long, List<NotificationRuleItem>> itemsByRuleId) {
+    private Set<String> collectVictoriaAppIds(List<NotificationRule> usableRules,
+                                              Map<Long, List<NotificationRuleItem>> itemsByRuleId) {
         Set<String> victoriaAppIds = new LinkedHashSet<>();
         for (NotificationRule rule : usableRules) {
             for (NotificationRuleItem item : itemsByRuleId.get(rule.getId())) {
@@ -214,10 +216,10 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     // Keep only (app, template) pairs enabled in enabledTemplateIdsByApp whose count hit the threshold
-    private Map<String, List<String>> collectBreachLines(Map<String, VictoriaLogsStatsDto> rowByApp,
-                                                         Map<Long, QueryTemplate> queryTemplateById,
-                                                         Map<String, Set<Long>> enabledTemplateIdsByApp,
-                                                         Map<String, String> appNameByVictoriaAppId) {
+    private Map<String, List<String>> buildBreachLines(Map<String, VictoriaLogsStatsDto> rowByApp,
+                                                       Map<Long, QueryTemplate> queryTemplateById,
+                                                       Map<String, Set<Long>> enabledTemplateIdsByApp,
+                                                       Map<String, String> appNameByVictoriaAppId) {
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         for (VictoriaLogsStatsDto row : rowByApp.values()) {
             Set<Long> enabledTemplateIds = enabledTemplateIdsByApp.get(row.getApplication());
@@ -237,9 +239,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
         return breachLinesByApp;
     }
 
+    // Chỉ cần MỘT cặp khớp điều kiện là gửi thông báo
     private List<String> buildAlertLines(NotificationRule rule, List<NotificationRuleItem> items,
                                          Map<String, VictoriaLogsStatsDto> rowByApp) {
         int[] counts = resolveCounts(items, rowByApp);
+        // Không có log nào trong cửa sổ: mọi count đều 0 nên EQ/GTE/LTE sẽ khớp và bắn cảnh báo giả
+        // mỗi chu kỳ. Rule chỉ có MỘT SỐ vế bằng 0 thì vẫn xét — đó là ca "app ngừng ghi log" cần bắt.
         if (isAllZero(counts)) {
             log.debug("Notification rule [{}] has no log in the last window, skip comparison", rule.getName());
             return Collections.emptyList();
@@ -288,6 +293,8 @@ public class VictoriaLogsErrorAlertJob implements Job {
         return counts;
     }
 
+    // Toán tử thuộc về item sau, nối nó với item liền trước: điều kiện tính là `previous <operator> current`.
+    // Trả true nghĩa là ĐIỀU KIỆN CẢNH BÁO đã khớp và phải gửi thông báo, KHÔNG phải "hệ thống đang ổn".
     private Boolean matches(Integer operator, int previousCount, int currentCount) {
         if (BaseConstant.RULE_ITEM_OPERATOR_EQ.equals(operator)) {
             return previousCount == currentCount;

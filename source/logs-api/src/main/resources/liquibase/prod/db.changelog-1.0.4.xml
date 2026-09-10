@@ -1,0 +1,80 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="Authentication" id="1789034834681-1">
+        <createTable tableName="db_notification_rule">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="db_notification_rulePK"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="notification_group_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-2">
+        <createTable tableName="db_notification_rule_item">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="db_notification_rule_itemPK"/>
+            </column>
+            <column name="operator" type="INT"/>
+            <column name="ordering" type="INT"/>
+            <column name="application_id" type="BIGINT"/>
+            <column name="notification_rule_id" type="BIGINT"/>
+            <column name="query_template_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-3">
+        <addColumn tableName="db_notification_group">
+            <column name="filter_query" type="varchar(255)" afterColumn="time_frame"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-4">
+        <addColumn tableName="db_notification_group">
+            <column name="check_type" type="integer" afterColumn="filter_query"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-5">
+        <addUniqueConstraint columnNames="notification_rule_id, ordering" constraintName="UKnl6liqp0nnxo4rcre6mmkcx7c" tableName="db_notification_rule_item"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-6">
+        <addForeignKeyConstraint baseColumnNames="notification_group_id" baseTableName="db_notification_rule" constraintName="FK9xn0g7ilx0obcej69qpii5c6y" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_notification_group" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-7">
+        <addForeignKeyConstraint baseColumnNames="application_id" baseTableName="db_notification_rule_item" constraintName="FKaghsjvxo3s00u9qiq64u1coa9" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_application" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-8">
+        <addForeignKeyConstraint baseColumnNames="query_template_id" baseTableName="db_notification_rule_item" constraintName="FKn23evs8kci98fg7l9tjy5tx18" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_query_template" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1789034834681-9">
+        <addForeignKeyConstraint baseColumnNames="notification_rule_id" baseTableName="db_notification_rule_item" constraintName="FKponnv8vt4lps4c135xdysjboe" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_notification_rule" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
