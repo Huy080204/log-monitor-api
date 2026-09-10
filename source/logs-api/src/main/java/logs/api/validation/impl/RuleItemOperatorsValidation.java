@@ -15,8 +15,11 @@ public class RuleItemOperatorsValidation implements ConstraintValidator<RuleItem
 
     @Override
     public boolean isValid(List<NotificationRuleItemForm> value, ConstraintValidatorContext context) {
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             return true;
+        }
+        if (value.get(0).getOperator() != null) {
+            return false;
         }
         for (int i = 1; i < value.size(); i++) {
             if (value.get(i).getOperator() == null) {
