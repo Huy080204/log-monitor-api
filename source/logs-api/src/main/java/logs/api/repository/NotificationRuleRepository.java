@@ -8,11 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface NotificationRuleRepository extends JpaRepository<NotificationRule, Long>, JpaSpecificationExecutor<NotificationRule> {
 
     boolean existsByNotificationGroupIdAndName(Long notificationGroupId, String name);
 
     boolean existsByNotificationGroupIdAndNameAndIdNot(Long notificationGroupId, String name, Long id);
+
+    List<NotificationRule> findAllByNotificationGroupIdAndStatus(Long notificationGroupId, Integer status);
 
     @Modifying
     @Transactional

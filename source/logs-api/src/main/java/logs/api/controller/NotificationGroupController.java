@@ -18,6 +18,7 @@ import logs.api.repository.NotificationChannelRepository;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
+import logs.api.repository.NotificationRuleItemRepository;
 import logs.api.repository.NotificationRuleRepository;
 import logs.api.service.QuartzSchedulerService;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,9 @@ public class NotificationGroupController extends ABasicController {
 
     @Autowired
     private NotificationRuleRepository notificationRuleRepository;
+
+    @Autowired
+    private NotificationRuleItemRepository notificationRuleItemRepository;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOG_V')")
@@ -153,8 +157,12 @@ public class NotificationGroupController extends ABasicController {
         }
 
         notificationRepository.deleteAllByNotificationGroupId(id);
-        notificationQueryRepository.deleteAllByNotificationGroupId(id);
-        notificationRuleRepository.deleteAllByNotificationGroupId(id);
+        if (BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD.equals(notificationGroup.getCheckType())) {
+            notificationQueryRepository.deleteAllByNotificationGroupId(id);
+        } else if (BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_COMPARISON.equals(notificationGroup.getCheckType())) {
+            notificationRuleItemRepository.deleteAllByNotificationRuleNotificationGroupId(id);
+            notificationRuleRepository.deleteAllByNotificationGroupId(id);
+        }
         notificationGroupRepository.delete(notificationGroup);
         quartzSchedulerService.deleteGroup(id);
         return makeSuccessResponse("Delete notification group success");

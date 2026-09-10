@@ -7,6 +7,8 @@ import logs.api.model.*;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
+import logs.api.repository.NotificationRuleItemRepository;
+import logs.api.repository.NotificationRuleRepository;
 import logs.api.service.feign.FeignConst;
 import logs.api.service.feign.FeignVictoriaLogsService;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private NotificationRuleRepository notificationRuleRepository;
+
+    @Autowired
+    private NotificationRuleItemRepository notificationRuleItemRepository;
+
     @Override
     public void execute(JobExecutionContext context) {
         Long groupId = (Long) context.getJobDetail().getJobDataMap().get("groupId");
@@ -44,9 +52,15 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 log.debug("Notification group [{}] not found or not active, skip VictoriaLogs error check", groupId);
                 return;
             }
-            log.info("Start checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
-            checkErrorRateAndAlert(activeGroup);
-            log.info("Finished checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
+            if (BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_COMPARISON.equals(activeGroup.getCheckType())) {
+                log.info("Start checkComparisonAndAlert for group [{} - {}]", groupId, activeGroup.getName());
+                checkComparisonAndAlert(activeGroup);
+                log.info("Finished checkComparisonAndAlert for group [{} - {}]", groupId, activeGroup.getName());
+            } else {
+                log.info("Start checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
+                checkErrorRateAndAlert(activeGroup);
+                log.info("Finished checkErrorRateAndAlert for group [{} - {}]", groupId, activeGroup.getName());
+            }
         } catch (Exception e) {
             log.error("Error occurred in checkErrorRateAndAlert job", e);
         }
@@ -110,6 +124,110 @@ public class VictoriaLogsErrorAlertJob implements Job {
         }
         notificationRepository.saveAll(notifications);
         log.info("Successfully created {} notifications for {} breaching app(s)", notifications.size(), apps.size());
+    }
+
+    void checkComparisonAndAlert(NotificationGroup activeGroup) {
+        List<NotificationRule> rules = notificationRuleRepository.findAllByNotificationGroupIdAndStatus(activeGroup.getId(), BaseConstant.STATUS_ACTIVE);
+        if (rules.isEmpty()) {
+            log.debug("Active notification group [{}] has no active notification rule, skip VictoriaLogs comparison check", activeGroup.getName());
+            return;
+        }
+
+        Map<NotificationRule, List<NotificationRuleItem>> itemsByRule = new LinkedHashMap<>();
+        Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
+        Map<String, Set<Long>> enabledTemplateIdsByApp = new LinkedHashMap<>();
+        for (NotificationRule rule : rules) {
+            List<NotificationRuleItem> items = notificationRuleItemRepository.findAllByNotificationRuleIdOrderByOrdering(rule.getId());
+            if (items == null || items.size() < 2) {
+                log.warn("Notification rule [{}] has fewer than 2 items, skip comparison check", rule.getName());
+                continue;
+            }
+            itemsByRule.put(rule, items);
+            for (NotificationRuleItem item : items) {
+                Applications application = item.getApplication();
+                QueryTemplate queryTemplate = item.getQueryTemplate();
+                queryTemplateById.putIfAbsent(queryTemplate.getId(), queryTemplate);
+                enabledTemplateIdsByApp.computeIfAbsent(application.getVictoriaAppId(), k -> new LinkedHashSet<>())
+                        .add(queryTemplate.getId());
+            }
+        }
+        if (itemsByRule.isEmpty()) {
+            log.debug("Active notification group [{}] has no usable notification rule, skip VictoriaLogs comparison check", activeGroup.getName());
+            return;
+        }
+
+        String query = buildQuery(activeGroup.getTimeFrame(), activeGroup.getFilterQuery(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
+        log.info("Querying VictoriaLogs for comparison with query [{}]", query);
+        List<VictoriaLogsStatsDto> rows = feignVictoriaLogsService.query(
+                FeignConst.LOGIN_TYPE_NO_AUTH, VictoriaLogsQueryForm.of(query));
+
+        Map<String, Integer> countByKey = new HashMap<>();
+        if (rows != null) {
+            for (VictoriaLogsStatsDto row : rows) {
+                Set<Long> templateIds = enabledTemplateIdsByApp.get(row.getApplication());
+                if (templateIds == null) {
+                    continue;
+                }
+                for (Long templateId : templateIds) {
+                    countByKey.put(row.getApplication() + "|" + templateId, row.count(String.valueOf(templateId)));
+                }
+            }
+        }
+
+        List<Notification> notifications = new ArrayList<>();
+        for (Map.Entry<NotificationRule, List<NotificationRuleItem>> entry : itemsByRule.entrySet()) {
+            NotificationRule rule = entry.getKey();
+            List<NotificationRuleItem> items = entry.getValue();
+            boolean violated = false;
+            List<String> lines = new ArrayList<>();
+            for (int i = 1; i < items.size(); i++) {
+                NotificationRuleItem refItem = items.get(i - 1);
+                NotificationRuleItem curItem = items.get(i);
+                int refCount = countByKey.getOrDefault(itemKey(refItem), 0);
+                int curCount = countByKey.getOrDefault(itemKey(curItem), 0);
+                boolean pass = matches(curItem.getOperator(), refCount, curCount);
+                if (!pass) {
+                    violated = true;
+                }
+                lines.add(String.format("  • `%s` -> `%s`: %d vs %d [%s]",
+                        refItem.getQueryTemplate().getName(), curItem.getQueryTemplate().getName(),
+                        refCount, curCount, pass ? "OK" : "FAIL"));
+            }
+            if (violated) {
+                Notification notification = new Notification();
+                notification.setMessage(String.format("🚨 Cảnh báo so sánh: %s\n%s", rule.getName(), String.join("\n", lines)));
+                notification.setState(BaseConstant.NOTIFICATION_STATE_SENT);
+                notification.setNotificationGroup(activeGroup);
+                notifications.add(notification);
+            }
+        }
+
+        if (!notifications.isEmpty()) {
+            notificationRepository.saveAll(notifications);
+            log.info("Successfully created {} comparison notifications", notifications.size());
+        }
+    }
+
+    private String itemKey(NotificationRuleItem item) {
+        return item.getApplication().getVictoriaAppId() + "|" + item.getQueryTemplate().getId();
+    }
+
+    boolean matches(Integer operator, int ref, int cur) {
+        if (BaseConstant.RULE_ITEM_OPERATOR_EQ.equals(operator)) {
+            return cur == ref;
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_NEQ.equals(operator)) {
+            return cur != ref;
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_GT.equals(operator)) {
+            return cur > ref;
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_GTE.equals(operator)) {
+            return cur >= ref;
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_LT.equals(operator)) {
+            return cur < ref;
+        } else if (BaseConstant.RULE_ITEM_OPERATOR_LTE.equals(operator)) {
+            return cur <= ref;
+        }
+        log.warn("Unrecognized rule item operator [{}], treating comparison as a violation", operator);
+        return false;
     }
 
     // Pack app chunks into messages, starting a new message once the limit is hit
@@ -224,7 +342,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
         if (filterQuery != null && !filterQuery.trim().isEmpty()) {
             prefix.append(" ").append(filterQuery.trim());
         }
-        prefix.append(" ").append(String.format("%s:in(%s)", BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps));
+        prefix.append(" ").append(String.format("{%s:in(%s)}", BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps));
 
         return String.format("%s | stats by (%s) %s",
                 prefix, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);

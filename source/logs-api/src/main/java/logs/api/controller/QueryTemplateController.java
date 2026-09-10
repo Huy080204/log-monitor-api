@@ -15,6 +15,7 @@ import logs.api.model.QueryTemplate;
 import logs.api.model.criteria.QueryTemplateCriteria;
 import logs.api.repository.ApplicationsRepository;
 import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.NotificationRuleItemRepository;
 import logs.api.repository.QueryTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,9 @@ public class QueryTemplateController extends ABasicController {
 
     @Autowired
     private NotificationQueryRepository notificationQueryRepository;
+
+    @Autowired
+    private NotificationRuleItemRepository notificationRuleItemRepository;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('QTP_V')")
@@ -134,6 +138,7 @@ public class QueryTemplateController extends ABasicController {
         QueryTemplate queryTemplate = queryTemplateRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Query template not found", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
         notificationQueryRepository.deleteAllByQueryTemplateId(id);
+        notificationRuleItemRepository.deleteAllByQueryTemplateId(id);
         queryTemplateRepository.delete(queryTemplate);
         return makeSuccessResponse("Delete query template success");
     }
