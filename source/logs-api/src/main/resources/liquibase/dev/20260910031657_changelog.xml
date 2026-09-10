@@ -5,4 +5,10 @@
             <column name="filter_query" type="varchar(255)" afterColumn="time_frame"/>
         </addColumn>
     </changeSet>
+    <changeSet author="Authentication" id="1789010229214-2">
+        <modifyDataType
+                tableName="db_notification_rule"
+                columnName="description"
+                newDataType="TEXT"/>
+    </changeSet>
 </databaseChangeLog>
