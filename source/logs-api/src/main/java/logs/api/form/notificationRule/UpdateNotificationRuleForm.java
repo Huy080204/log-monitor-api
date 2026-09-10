@@ -20,8 +20,7 @@ public class UpdateNotificationRuleForm {
     @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @NotBlank(message = "description cannot be null")
-    @Schema(name = "description", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(name = "description")
     private String description;
 
     @Schema(name = "status")
