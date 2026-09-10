@@ -26,6 +26,5 @@ public class NotificationGroup extends Auditable<String> {
 
     private Integer timeFrame; // minute
 
-
     private String filterQuery;
 }
