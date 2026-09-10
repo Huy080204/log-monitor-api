@@ -14,6 +14,7 @@ import logs.api.model.Applications;
 import logs.api.model.criteria.ApplicationsCriteria;
 import logs.api.repository.ApplicationsRepository;
 import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.NotificationRuleItemRepository;
 import logs.api.repository.QueryTemplateRepository;
 import logs.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,9 @@ class ApplicationsControllerTest {
 
     @Mock
     private NotificationQueryRepository notificationQueryRepository;
+
+    @Mock
+    private NotificationRuleItemRepository notificationRuleItemRepository;
 
     @Mock
     private UserServiceImpl userService;
@@ -221,6 +225,11 @@ class ApplicationsControllerTest {
         inOrder.verify(notificationQueryRepository).deleteAllByQueryTemplateApplicationId(1L);
         inOrder.verify(queryTemplateRepository).deleteAllByApplicationId(1L);
         inOrder.verify(applicationsRepository).delete(entity);
+
+        InOrder ruleItemInOrder = inOrder(notificationRuleItemRepository, queryTemplateRepository);
+        ruleItemInOrder.verify(notificationRuleItemRepository).deleteAllByApplicationId(1L);
+        ruleItemInOrder.verify(notificationRuleItemRepository).deleteAllByQueryTemplateApplicationId(1L);
+        ruleItemInOrder.verify(queryTemplateRepository).deleteAllByApplicationId(1L);
     }
 
     @Test

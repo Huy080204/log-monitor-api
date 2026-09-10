@@ -38,6 +38,14 @@ public class BaseConstant {
     public static final Integer NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD = 1;
     public static final Integer NOTIFICATION_GROUP_CHECK_TYPE_COMPARISON = 2;
 
+    // NotificationRule item operator
+    public static final Integer RULE_ITEM_OPERATOR_EQ = 0;
+    public static final Integer RULE_ITEM_OPERATOR_NEQ = 1;
+    public static final Integer RULE_ITEM_OPERATOR_GT = 2;
+    public static final Integer RULE_ITEM_OPERATOR_GTE = 3;
+    public static final Integer RULE_ITEM_OPERATOR_LT = 4;
+    public static final Integer RULE_ITEM_OPERATOR_LTE = 5;
+
     private BaseConstant() {
         throw new IllegalStateException("Utility class");
     }

@@ -36,6 +36,7 @@ public class ErrorCode {
      */
     public static final String NOTIFICATION_RULE_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-RULE-0000";
     public static final String NOTIFICATION_RULE_ERROR_NAME_EXISTED = "ERROR-NOTIFICATION-RULE-0001";
+    public static final String NOTIFICATION_RULE_ERROR_ITEM_NOT_FOUND = "ERROR-NOTIFICATION-RULE-0004";
 
 
     /**

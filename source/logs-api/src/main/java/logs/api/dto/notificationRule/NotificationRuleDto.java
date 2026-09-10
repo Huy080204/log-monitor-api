@@ -5,6 +5,8 @@ import logs.api.dto.ABasicAdminDto;
 import logs.api.dto.notificationGroup.NotificationGroupDto;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Schema
 public class NotificationRuleDto extends ABasicAdminDto {
@@ -14,4 +16,6 @@ public class NotificationRuleDto extends ABasicAdminDto {
     private String description;
     @Schema(name = "notificationGroup")
     private NotificationGroupDto notificationGroup;
+    @Schema(name = "items")
+    private List<NotificationRuleItemDto> items;
 }

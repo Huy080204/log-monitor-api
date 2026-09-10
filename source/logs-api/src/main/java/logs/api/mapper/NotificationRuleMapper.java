@@ -42,7 +42,6 @@ public interface NotificationRuleMapper {
 
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "status", target = "status")
     @BeanMapping(ignoreByDefault = true)
     @Named("updateEntityFromForm")
     void updateEntityFromForm(UpdateNotificationRuleForm updateNotificationRuleForm, @MappingTarget NotificationRule notificationRule);

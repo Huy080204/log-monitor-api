@@ -18,6 +18,7 @@ import logs.api.repository.NotificationChannelRepository;
 import logs.api.repository.NotificationGroupRepository;
 import logs.api.repository.NotificationQueryRepository;
 import logs.api.repository.NotificationRepository;
+import logs.api.repository.NotificationRuleItemRepository;
 import logs.api.repository.NotificationRuleRepository;
 import logs.api.service.QuartzSchedulerService;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,8 @@ class NotificationGroupControllerTest {
     private NotificationQueryRepository notificationQueryRepository;
     @Mock
     private NotificationRuleRepository notificationRuleRepository;
+    @Mock
+    private NotificationRuleItemRepository notificationRuleItemRepository;
     @Mock
     private NotificationChannelRepository notificationChannelRepository;
     @Mock
@@ -202,6 +205,10 @@ class NotificationGroupControllerTest {
         inOrder.verify(notificationQueryRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationRuleRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationGroupRepository).delete(entity);
+
+        InOrder ruleItemInOrder = inOrder(notificationRuleItemRepository, notificationRuleRepository);
+        ruleItemInOrder.verify(notificationRuleItemRepository).deleteAllByNotificationRuleNotificationGroupId(1L);
+        ruleItemInOrder.verify(notificationRuleRepository).deleteAllByNotificationGroupId(1L);
     }
 
     @Test

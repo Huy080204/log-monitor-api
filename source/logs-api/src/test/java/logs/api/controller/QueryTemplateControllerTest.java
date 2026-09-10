@@ -15,6 +15,7 @@ import logs.api.model.QueryTemplate;
 import logs.api.model.criteria.QueryTemplateCriteria;
 import logs.api.repository.ApplicationsRepository;
 import logs.api.repository.NotificationQueryRepository;
+import logs.api.repository.NotificationRuleItemRepository;
 import logs.api.repository.QueryTemplateRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +56,9 @@ class QueryTemplateControllerTest {
 
     @Mock
     private NotificationQueryRepository notificationQueryRepository;
+
+    @Mock
+    private NotificationRuleItemRepository notificationRuleItemRepository;
 
     @InjectMocks
     private QueryTemplateController controller;
@@ -331,6 +335,7 @@ class QueryTemplateControllerTest {
         InOrder inOrder = inOrder(notificationQueryRepository, queryTemplateRepository);
         inOrder.verify(notificationQueryRepository).deleteAllByQueryTemplateId(1L);
         inOrder.verify(queryTemplateRepository).delete(entity);
+        verify(notificationRuleItemRepository).deleteAllByQueryTemplateId(1L);
     }
 
     @Test
