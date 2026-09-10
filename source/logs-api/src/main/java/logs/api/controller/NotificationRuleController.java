@@ -202,7 +202,7 @@ public class NotificationRuleController extends ABasicController {
         }
 
         if (!existingItemsById.isEmpty()) {
-            notificationRuleItemRepository.deleteAll(existingItemsById.values());
+            notificationRuleItemRepository.deleteAllByIdIn(existingItemsById.keySet());
         }
         notificationRuleItemRepository.saveAll(itemsToSave);
     }

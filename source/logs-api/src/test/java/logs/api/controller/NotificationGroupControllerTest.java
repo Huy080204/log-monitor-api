@@ -39,9 +39,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -178,37 +180,61 @@ class NotificationGroupControllerTest {
     }
 
     @Test
-    void shouldThrowBadRequestWhenDeleteActiveGroup() {
+    void shouldDeleteSuccessfullyWhenGroupIsActive() {
         NotificationGroup entity = new NotificationGroup();
         entity.setId(1L);
         entity.setStatus(BaseConstant.STATUS_ACTIVE);
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
-
-        assertThatThrownBy(() -> controller.delete(1L))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.NOTIFICATION_GROUP_ERROR_DELETE_ACTIVE);
-    }
-
-    @Test
-    void shouldCascadeDeleteChildrenInOrderWhenDeletingNonActiveGroup() {
-        NotificationGroup entity = new NotificationGroup();
-        entity.setId(1L);
-        entity.setStatus(BaseConstant.STATUS_PENDING);
+        entity.setCheckType(BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD);
         when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
 
         ApiMessageDto<Void> result = controller.delete(1L);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Delete notification group success");
-        InOrder inOrder = inOrder(notificationRepository, notificationQueryRepository, notificationRuleRepository, notificationGroupRepository);
+        InOrder inOrder = inOrder(notificationRepository, notificationQueryRepository, notificationGroupRepository);
         inOrder.verify(notificationRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationQueryRepository).deleteAllByNotificationGroupId(1L);
+        inOrder.verify(notificationGroupRepository).delete(entity);
+    }
+
+    @Test
+    void shouldCascadeDeleteQueriesInOrderWhenDeletingNonActiveThresholdGroup() {
+        NotificationGroup entity = new NotificationGroup();
+        entity.setId(1L);
+        entity.setStatus(BaseConstant.STATUS_PENDING);
+        entity.setCheckType(BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD);
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        ApiMessageDto<Void> result = controller.delete(1L);
+
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getMessage()).isEqualTo("Delete notification group success");
+        InOrder inOrder = inOrder(notificationRepository, notificationQueryRepository, notificationGroupRepository);
+        inOrder.verify(notificationRepository).deleteAllByNotificationGroupId(1L);
+        inOrder.verify(notificationQueryRepository).deleteAllByNotificationGroupId(1L);
+        inOrder.verify(notificationGroupRepository).delete(entity);
+        verify(notificationRuleItemRepository, never()).deleteAllByNotificationRuleNotificationGroupId(anyLong());
+        verify(notificationRuleRepository, never()).deleteAllByNotificationGroupId(anyLong());
+    }
+
+    @Test
+    void shouldCascadeDeleteRuleItemsInOrderWhenDeletingNonActiveComparisonGroup() {
+        NotificationGroup entity = new NotificationGroup();
+        entity.setId(1L);
+        entity.setStatus(BaseConstant.STATUS_PENDING);
+        entity.setCheckType(BaseConstant.NOTIFICATION_GROUP_CHECK_TYPE_COMPARISON);
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        ApiMessageDto<Void> result = controller.delete(1L);
+
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getMessage()).isEqualTo("Delete notification group success");
+        InOrder inOrder = inOrder(notificationRepository, notificationRuleItemRepository, notificationRuleRepository, notificationGroupRepository);
+        inOrder.verify(notificationRepository).deleteAllByNotificationGroupId(1L);
+        inOrder.verify(notificationRuleItemRepository).deleteAllByNotificationRuleNotificationGroupId(1L);
         inOrder.verify(notificationRuleRepository).deleteAllByNotificationGroupId(1L);
         inOrder.verify(notificationGroupRepository).delete(entity);
-
-        InOrder ruleItemInOrder = inOrder(notificationRuleItemRepository, notificationRuleRepository);
-        ruleItemInOrder.verify(notificationRuleItemRepository).deleteAllByNotificationRuleNotificationGroupId(1L);
-        ruleItemInOrder.verify(notificationRuleRepository).deleteAllByNotificationGroupId(1L);
+        verify(notificationQueryRepository, never()).deleteAllByNotificationGroupId(anyLong());
     }
 
     @Test
