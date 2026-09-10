@@ -5,12 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = DatabaseConstant.PREFIX_TABLE + "notification_group")
@@ -20,6 +15,8 @@ import javax.persistence.Table;
 public class NotificationGroup extends Auditable<String> {
     private String name;
 
+    private Integer checkType; // 1: threshold, 2: comparison
+
     @Column(columnDefinition = "text")
     private String description;
 
@@ -28,6 +25,7 @@ public class NotificationGroup extends Auditable<String> {
     private NotificationChannel notificationChannel;
 
     private Integer timeFrame; // minute
+
 
     private String filterQuery;
 }

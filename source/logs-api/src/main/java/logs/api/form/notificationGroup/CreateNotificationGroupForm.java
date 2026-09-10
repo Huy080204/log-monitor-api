@@ -32,4 +32,7 @@ public class CreateNotificationGroupForm {
 
     @Schema(name = "filterQuery")
     private String filterQuery;
+
+    @Schema(name = "checkType", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer checkType;
 }

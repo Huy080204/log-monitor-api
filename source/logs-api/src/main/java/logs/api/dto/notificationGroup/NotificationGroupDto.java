@@ -10,6 +10,8 @@ import lombok.Data;
 public class NotificationGroupDto extends ABasicAdminDto {
     @Schema(name = "name")
     private String name;
+    @Schema(name = "checkType")
+    private Integer checkType;
     @Schema(name = "description")
     private String description;
     @Schema(name = "notificationChannel")
