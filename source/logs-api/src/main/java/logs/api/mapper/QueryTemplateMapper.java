@@ -68,4 +68,11 @@ public interface QueryTemplateMapper {
 
     @IterableMapping(elementTargetType = QueryTemplateDto.class, qualifiedByName = "autoCompleteMapping")
     List<QueryTemplateDto> fromEntityListToQueryTemplateAutoCompleteDto(List<QueryTemplate> queryTemplates);
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "query", target = "query")
+    @BeanMapping(ignoreByDefault = true)
+    @Named("fromEntityToQueryTemplateShortDto")
+    QueryTemplateDto fromEntityToQueryTemplateShortDto(QueryTemplate queryTemplate);
 }
