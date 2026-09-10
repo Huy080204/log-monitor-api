@@ -3,11 +3,7 @@ package logs.api.scheduler;
 import logs.api.constant.BaseConstant;
 import logs.api.dto.victorialogs.VictoriaLogsStatsDto;
 import logs.api.model.*;
-import logs.api.repository.NotificationGroupRepository;
-import logs.api.repository.NotificationQueryRepository;
-import logs.api.repository.NotificationRepository;
-import logs.api.repository.NotificationRuleItemRepository;
-import logs.api.repository.NotificationRuleRepository;
+import logs.api.repository.*;
 import logs.api.service.NotificationService;
 import logs.api.service.VictoriaLogService;
 import lombok.extern.slf4j.Slf4j;
@@ -168,8 +164,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
 
     private Map<Long, List<NotificationRuleItem>> loadItemsByRuleId(List<NotificationRule> rules) {
         List<Long> ruleIds = rules.stream().map(NotificationRule::getId).collect(Collectors.toList());
-        return notificationRuleItemRepository.findAllByNotificationRuleIdInFetchingRefs(ruleIds).stream()
-                .collect(Collectors.groupingBy(item -> item.getNotificationRule().getId()));
+        List<NotificationRuleItem> items = notificationRuleItemRepository.findAllByNotificationRuleIdInFetchingRefs(ruleIds);
+        return items.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                item -> item.getNotificationRule().getId())
+                );
     }
 
     private Set<String> collectVictoriaAppIdsByRules(List<NotificationRule> usableRules,
@@ -183,7 +183,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
         return victoriaAppIds;
     }
 
-    private Set<QueryTemplate> collectQueryTemplates(List<NotificationRule> usableRules,
+    private Collection<QueryTemplate> collectQueryTemplates(List<NotificationRule> usableRules,
                                                             Map<Long, List<NotificationRuleItem>> itemsByRuleId) {
         Map<Long, QueryTemplate> queryTemplateById = new LinkedHashMap<>();
         for (NotificationRule rule : usableRules) {
@@ -191,7 +191,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 queryTemplateById.putIfAbsent(item.getQueryTemplate().getId(), item.getQueryTemplate());
             }
         }
-        return (Set<QueryTemplate>) queryTemplateById.values();
+        return queryTemplateById.values();
     }
 
     private Map<String, VictoriaLogsStatsDto> fetchRowsByApp(NotificationGroup activeGroup,
