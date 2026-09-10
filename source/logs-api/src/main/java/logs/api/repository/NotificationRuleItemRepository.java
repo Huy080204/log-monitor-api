@@ -7,11 +7,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface NotificationRuleItemRepository extends JpaRepository<NotificationRuleItem, Long> {
 
     List<NotificationRuleItem> findAllByNotificationRuleIdOrderByOrdering(Long notificationRuleId);
+
+    @Query("SELECT i FROM NotificationRuleItem i "
+            + "JOIN FETCH i.notificationRule nr "
+            + "JOIN FETCH i.application "
+            + "JOIN FETCH i.queryTemplate qt "
+            + "JOIN FETCH qt.application "
+            + "WHERE nr.id IN :notificationRuleIds "
+            + "ORDER BY nr.id ASC, i.ordering ASC")
+    List<NotificationRuleItem> findAllByNotificationRuleIdInFetchingRefs(@Param("notificationRuleIds") Collection<Long> notificationRuleIds);
 
     @Modifying
     @Transactional
