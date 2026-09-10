@@ -28,4 +28,6 @@ public class NotificationGroup extends Auditable<String> {
     private NotificationChannel notificationChannel;
 
     private Integer timeFrame; // minute
+
+    private String filterQuery;
 }

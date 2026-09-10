@@ -81,7 +81,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
             return;
         }
 
-        String query = buildQuery(activeGroup.getTimeFrame(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
+        String query = buildQuery(activeGroup.getTimeFrame(), activeGroup.getFilterQuery(), enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
         Map<String, List<String>> breachLinesByApp = queryBreachesByApp(query, queryTemplateById,
                 enabledTemplateIdsByApp, appNameByVictoriaAppId);
         if (breachLinesByApp.isEmpty()) {
@@ -199,7 +199,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     // Build LogsQL: time window + application:in(...) + one count() if per distinct QueryTemplate
-    String buildQuery(Integer timeFrameMinutes, Collection<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
+    String buildQuery(Integer timeFrameMinutes, String filterQuery, Collection<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
         StringBuilder apps = new StringBuilder();
         for (String victoriaAppId : victoriaAppIds) {
             if (apps.length() > 0) {
@@ -220,8 +220,13 @@ public class VictoriaLogsErrorAlertJob implements Job {
                     .append("\"");
         }
 
-        return String.format("_time:%dm %s:in(%s) | stats by (%s) %s",
-                timeFrameMinutes, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps,
-                BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
+        StringBuilder prefix = new StringBuilder(String.format("_time:%dm", timeFrameMinutes));
+        if (filterQuery != null && !filterQuery.trim().isEmpty()) {
+            prefix.append(" ").append(filterQuery.trim());
+        }
+        prefix.append(" ").append(String.format("%s:in(%s)", BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, apps));
+
+        return String.format("%s | stats by (%s) %s",
+                prefix, BaseConstant.VICTORIALOGS_QUERY_APP_FIELD, stats);
     }
 }

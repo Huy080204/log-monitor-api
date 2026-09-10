@@ -29,4 +29,7 @@ public class CreateNotificationGroupForm {
     @Min(value = 1, message = "timeFrame must be at least 1")
     @Schema(name = "timeFrame", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer timeFrame;
+
+    @Schema(name = "filterQuery")
+    private String filterQuery;
 }
