@@ -59,7 +59,7 @@
     </changeSet>
     <changeSet author="Authentication" id="1789034834681-4">
         <addColumn tableName="db_notification_group">
-            <column name="check_type" type="integer" afterColumn="filter_query"/>
+            <column name="check_type" type="integer" afterColumn="name"/>
         </addColumn>
     </changeSet>
     <changeSet author="Authentication" id="1789034834681-5">
