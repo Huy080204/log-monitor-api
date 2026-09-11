@@ -50,7 +50,7 @@ public class NotificationService {
 
     // Split one app's breach lines into chunks only if they alone exceed the limit
     public List<String> buildAppChunks(String app, List<String> breachLines, int budget) {
-        String header = String.format("-%s", app);
+        String header = String.format("- %s", app);
         int headerLength = header.length();
 
         List<String> chunks = new ArrayList<>();
