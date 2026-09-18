@@ -16,6 +16,9 @@ public class VictoriaLogsStatsDto {
     @JsonProperty("application")
     private String application;
 
+    @JsonProperty("item_id")
+    private String itemId;
+
     private final Map<String, String> counts = new LinkedHashMap<>();
 
     @JsonAnySetter

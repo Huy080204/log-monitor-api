@@ -216,6 +216,37 @@ class QueryTemplateControllerTest {
     }
 
     @Test
+    void shouldThrowBadRequestWhenTypeThresholdAndCountNullOnCreate() {
+        CreateQueryTemplateForm form = new CreateQueryTemplateForm();
+        form.setType(BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD);
+        form.setCount(null);
+
+        assertThatThrownBy(() -> controller.create(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Count is required when type is threshold");
+    }
+
+    @Test
+    void shouldCreateQueryTemplateSuccessWhenTypeCustomAndCountNull() {
+        CreateQueryTemplateForm form = new CreateQueryTemplateForm();
+        form.setName("new-template");
+        form.setApplicationId(null);
+        form.setType(BaseConstant.QUERY_TEMPLATE_TYPE_CUSTOM);
+        form.setCount(null);
+        QueryTemplate entity = new QueryTemplate();
+        QueryTemplateDto idDto = new QueryTemplateDto();
+        when(queryTemplateRepository.existsByNameAndApplicationIdIsNull("new-template")).thenReturn(false);
+        when(queryTemplateMapper.fromFormToEntity(form)).thenReturn(entity);
+        when(queryTemplateMapper.fromEntityToQueryTemplateIdDto(entity)).thenReturn(idDto);
+
+        ApiMessageDto<QueryTemplateDto> result = controller.create(form, null);
+
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getData()).isSameAs(idDto);
+        verify(queryTemplateRepository).save(entity);
+    }
+
+    @Test
     void shouldThrowNotFoundWhenApplicationNotFoundOnCreate() {
         CreateQueryTemplateForm form = new CreateQueryTemplateForm();
         form.setName("new-template");
@@ -249,6 +280,42 @@ class QueryTemplateControllerTest {
         assertThat(result.getMessage()).isEqualTo("Update query template success");
         assertThat(entity.getApplication()).isSameAs(currentApplication);
         verify(applicationsRepository, never()).findById(any());
+        verify(queryTemplateRepository).save(entity);
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenTypeThresholdAndCountNullOnUpdate() {
+        UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
+        form.setId(1L);
+        form.setCount(null);
+        QueryTemplate entity = new QueryTemplate();
+        entity.setId(1L);
+        entity.setType(BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD);
+        when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        assertThatThrownBy(() -> controller.update(form, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Count is required when type is threshold");
+    }
+
+    @Test
+    void shouldUpdateQueryTemplateSuccessWhenTypeCustomAndCountNull() {
+        UpdateQueryTemplateForm form = new UpdateQueryTemplateForm();
+        form.setId(1L);
+        form.setName("same-name");
+        form.setCount(null);
+        QueryTemplate entity = new QueryTemplate();
+        entity.setName("same-name");
+        entity.setType(BaseConstant.QUERY_TEMPLATE_TYPE_CUSTOM);
+        Applications currentApplication = new Applications();
+        currentApplication.setId(2L);
+        entity.setApplication(currentApplication);
+        when(queryTemplateRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        ApiMessageDto<Void> result = controller.update(form, null);
+
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getMessage()).isEqualTo("Update query template success");
         verify(queryTemplateRepository).save(entity);
     }
 

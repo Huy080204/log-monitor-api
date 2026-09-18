@@ -53,7 +53,6 @@ public interface QueryTemplateMapper {
     @Mapping(source = "count", target = "count")
     @Mapping(source = "timeFrame", target = "timeFrame", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     @Mapping(source = "note", target = "note")
-    @Mapping(source = "type", target = "type")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminUpdateMapping")
     void updateEntityFromForm(UpdateQueryTemplateForm updateQueryTemplateForm, @MappingTarget QueryTemplate queryTemplate);

@@ -2,8 +2,6 @@ package logs.api.form.queryTemplate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
-import logs.api.validation.NotificationQueryStatus;
-import logs.api.validation.QueryTemplateType;
 import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
 
@@ -36,8 +34,4 @@ public class UpdateQueryTemplateForm {
 
     @Schema(name = "note")
     private String note;
-
-    @QueryTemplateType
-    @Schema(name = "type", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer type;
 }
