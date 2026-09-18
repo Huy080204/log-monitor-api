@@ -32,7 +32,18 @@ public class VictoriaLogsStatsDto {
     }
 
     public int count(String alias) {
-        String value = counts.get(alias);
+        return parse(counts.get(alias));
+    }
+
+    // Read the comparison row's one leftover numeric field, whatever its alias
+    public int firstCount() {
+        if (counts.size() != 1) {
+            return 0;
+        }
+        return parse(counts.values().iterator().next());
+    }
+
+    private int parse(String value) {
         if (value == null || value.isEmpty()) {
             return 0;
         }

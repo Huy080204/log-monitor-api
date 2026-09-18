@@ -285,8 +285,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
         for (int i = 0; i < items.size(); i++) {
             NotificationRuleItem item = items.get(i);
             VictoriaLogsStatsDto row = rowByItemId.get(String.valueOf(item.getId()));
-            // An item missing from the response counts as 0 rather than being skipped
-            counts[i] = row == null ? 0 : row.count("value");
+            counts[i] = row == null ? 0 : row.firstCount();
         }
         return counts;
     }
