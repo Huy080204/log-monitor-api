@@ -117,13 +117,13 @@ public class QueryTemplateController extends ABasicController {
     @PreAuthorize("hasRole('QTP_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdateQueryTemplateForm updateQueryTemplateForm, BindingResult bindingResult) {
-        if (BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD.equals(updateQueryTemplateForm.getType())
+        QueryTemplate queryTemplate = queryTemplateRepository.findById(updateQueryTemplateForm.getId())
+                .orElseThrow(() -> new NotFoundException("Query template not found", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
+
+        if (BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD.equals(queryTemplate.getType())
                 && updateQueryTemplateForm.getCount() == null) {
             throw new BadRequestException("Count is required when type is threshold");
         }
-
-        QueryTemplate queryTemplate = queryTemplateRepository.findById(updateQueryTemplateForm.getId())
-                .orElseThrow(() -> new NotFoundException("Query template not found", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
         Long currentApplicationId = queryTemplate.getApplication() != null ? queryTemplate.getApplication().getId() : null;
         if (!queryTemplate.getName().equals(updateQueryTemplateForm.getName())) {

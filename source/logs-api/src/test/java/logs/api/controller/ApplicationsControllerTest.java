@@ -96,19 +96,21 @@ class ApplicationsControllerTest {
     }
 
     @Test
-    void shouldThrowDuplicateNameWhenUpdateWithUnchangedName() {
+    void shouldAllowUpdateWhenNameUnchanged() {
         UpdateApplicationsForm form = new UpdateApplicationsForm();
         form.setId(1L);
         form.setName("logs-api");
         form.setDescription("logs api service updated");
         Applications entity = new Applications();
+        entity.setId(1L);
         entity.setName("logs-api");
         when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.existsByName("logs-api")).thenReturn(true);
 
-        assertThatThrownBy(() -> controller.update(form, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasFieldOrPropertyWithValue("code", ErrorCode.APPLICATIONS_ERROR_NAME_EXISTED);
+        ApiMessageDto<Void> result = controller.update(form, null);
+
+        assertThat(result.getResult()).isTrue();
+        verify(applicationsRepository, never()).existsByNameAndIdNot(anyString(), any());
+        verify(applicationsRepository).save(entity);
     }
 
     @Test
@@ -118,9 +120,10 @@ class ApplicationsControllerTest {
         form.setName("other-app");
         form.setDescription("desc");
         Applications entity = new Applications();
+        entity.setId(1L);
         entity.setName("logs-api");
         when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.existsByName("other-app")).thenReturn(true);
+        when(applicationsRepository.existsByNameAndIdNot("other-app", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.update(form, null))
                 .isInstanceOf(BadRequestException.class)
@@ -149,10 +152,11 @@ class ApplicationsControllerTest {
         form.setVictoriaAppId("app-2");
         form.setDescription("desc");
         Applications entity = new Applications();
+        entity.setId(1L);
         entity.setName("logs-api");
         entity.setVictoriaAppId("app-1");
         when(applicationsRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(applicationsRepository.existsByVictoriaAppId("app-2")).thenReturn(true);
+        when(applicationsRepository.existsByVictoriaAppIdAndIdNot("app-2", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.update(form, null))
                 .isInstanceOf(BadRequestException.class)

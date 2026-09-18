@@ -85,9 +85,14 @@ class NotificationRuleControllerTest {
     }
 
     private static QueryTemplate queryTemplate(Long id, Applications application) {
+        return queryTemplate(id, application, BaseConstant.QUERY_TEMPLATE_TYPE_CUSTOM);
+    }
+
+    private static QueryTemplate queryTemplate(Long id, Applications application, Integer type) {
         QueryTemplate queryTemplate = new QueryTemplate();
         queryTemplate.setId(id);
         queryTemplate.setApplication(application);
+        queryTemplate.setType(type);
         return queryTemplate;
     }
 
@@ -303,6 +308,45 @@ class NotificationRuleControllerTest {
         assertThat(savedItems.get(1).getNotificationRule()).isSameAs(newRule);
     }
 
+    @Test
+    void shouldThrowBadRequestWhenCreateItemQueryTemplateTypeIsOne() {
+        CreateNotificationRuleForm form = createForm(1L, "rule-1", List.of(itemForm(10L, 20L, null)));
+
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(comparisonGroup(1L)));
+        when(notificationRuleRepository.existsByNotificationGroupIdAndName(1L, "rule-1")).thenReturn(false);
+        when(applicationsRepository.findAllById(anyList())).thenReturn(List.of(application(10L)));
+        when(queryTemplateRepository.findAllById(anyList())).thenReturn(List.of(queryTemplate(20L, application(10L), 1)));
+
+        assertThatThrownBy(() -> controller.create(form, bindingResult))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void shouldCreateRuleWhenAllItemQueryTemplatesAreTypeTwo() {
+        NotificationGroup group = comparisonGroup(1L);
+        CreateNotificationRuleForm form = createForm(1L, "rule-1",
+                List.of(itemForm(10L, 20L, 5), itemForm(11L, 21L, 0)));
+
+        NotificationRule newRule = new NotificationRule();
+        NotificationRuleDto idDto = new NotificationRuleDto();
+
+        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(group));
+        when(notificationRuleRepository.existsByNotificationGroupIdAndName(1L, "rule-1")).thenReturn(false);
+        when(applicationsRepository.findAllById(anyList()))
+                .thenReturn(List.of(application(10L), application(11L)));
+        when(queryTemplateRepository.findAllById(anyList()))
+                .thenReturn(List.of(queryTemplate(20L, application(10L), 2), queryTemplate(21L, application(11L), 2)));
+        when(notificationRuleMapper.fromFormToEntity(form)).thenReturn(newRule);
+        when(notificationRuleMapper.fromEntityToNotificationRuleIdDto(newRule)).thenReturn(idDto);
+
+        ApiMessageDto<NotificationRuleDto> result = controller.create(form, bindingResult);
+
+        assertThat(result.getResult()).isTrue();
+        assertThat(result.getData()).isSameAs(idDto);
+        verify(notificationRuleRepository).save(newRule);
+        verify(notificationRuleItemRepository).saveAll(anyList());
+    }
+
     // ---------- update ----------
 
     @Test
@@ -433,6 +477,51 @@ class NotificationRuleControllerTest {
         controller.update(form, bindingResult);
 
         verify(notificationRuleItemRepository, never()).deleteAllByIdIn(any());
+        verify(notificationRuleItemRepository).saveAll(anyList());
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenUpdateItemQueryTemplateTypeIsOne() {
+        NotificationRule existingRule = new NotificationRule();
+        existingRule.setId(10L);
+        existingRule.setName("rule-10");
+        existingRule.setNotificationGroup(comparisonGroup(1L));
+
+        UpdateNotificationRuleForm form = updateForm(10L, "rule-10", List.of(updateItemForm(null, 10L, 20L, null)));
+
+        when(notificationRuleRepository.findById(10L)).thenReturn(Optional.of(existingRule));
+        when(applicationsRepository.findAllById(anyList())).thenReturn(List.of(application(10L)));
+        when(queryTemplateRepository.findAllById(anyList())).thenReturn(List.of(queryTemplate(20L, application(10L), 1)));
+
+        assertThatThrownBy(() -> controller.update(form, bindingResult))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void shouldUpdateRuleWhenAllItemQueryTemplatesAreTypeTwo() {
+        NotificationRule existingRule = new NotificationRule();
+        existingRule.setId(10L);
+        existingRule.setName("rule-10");
+        existingRule.setNotificationGroup(comparisonGroup(1L));
+
+        NotificationRuleItem keptItem = existingItem(401L);
+
+        UpdateNotificationRuleForm form = updateForm(10L, "rule-10", List.of(
+                updateItemForm(401L, 10L, 20L, null),
+                updateItemForm(null, 11L, 21L, 0)
+        ));
+
+        when(notificationRuleRepository.findById(10L)).thenReturn(Optional.of(existingRule));
+        when(applicationsRepository.findAllById(anyList()))
+                .thenReturn(List.of(application(10L), application(11L)));
+        when(queryTemplateRepository.findAllById(anyList()))
+                .thenReturn(List.of(queryTemplate(20L, application(10L), 2), queryTemplate(21L, application(11L), 2)));
+        when(notificationRuleItemRepository.findAllByNotificationRuleIdOrderByOrdering(10L))
+                .thenReturn(List.of(keptItem));
+
+        ApiMessageDto<Void> result = controller.update(form, bindingResult);
+
+        assertThat(result.getResult()).isTrue();
         verify(notificationRuleItemRepository).saveAll(anyList());
     }
 
