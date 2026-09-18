@@ -33,4 +33,7 @@ public class QueryTemplate extends Auditable<String> {
     @ManyToOne
     @JoinColumn(name = "application_id")
     private Applications application;
+
+    @Column(name = "type")
+    private Integer type;
 }

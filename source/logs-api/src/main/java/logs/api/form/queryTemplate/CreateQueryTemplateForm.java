@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
+import logs.api.validation.QueryTemplateType;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Schema
@@ -20,9 +20,8 @@ public class CreateQueryTemplateForm {
     @Schema(name = "query", requiredMode = Schema.RequiredMode.REQUIRED)
     private String query;
 
-    @NotNull(message = "count cannot be null")
     @Min(value = 1, message = "count must be greater than or equal to 1")
-    @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(name = "count")
     private Integer count;
 
     @Schema(name = "timeFrame")
@@ -34,4 +33,8 @@ public class CreateQueryTemplateForm {
     @Schema(name = "applicationId")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     private Long applicationId;
+
+    @QueryTemplateType
+    @Schema(name = "type", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer type;
 }

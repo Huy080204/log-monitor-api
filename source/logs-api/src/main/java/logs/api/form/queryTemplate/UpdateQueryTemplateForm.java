@@ -3,6 +3,7 @@ package logs.api.form.queryTemplate;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.validation.NotificationQueryStatus;
+import logs.api.validation.QueryTemplateType;
 import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
 
@@ -26,9 +27,8 @@ public class UpdateQueryTemplateForm {
     @Schema(name = "query", requiredMode = Schema.RequiredMode.REQUIRED)
     private String query;
 
-    @NotNull(message = "count cannot be null")
     @Min(value = 1, message = "count must be greater than or equal to 1")
-    @Schema(name = "count", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(name = "count")
     private Integer count;
 
     @Schema(name = "timeFrame")
@@ -36,4 +36,8 @@ public class UpdateQueryTemplateForm {
 
     @Schema(name = "note")
     private String note;
+
+    @QueryTemplateType
+    @Schema(name = "type", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Integer type;
 }

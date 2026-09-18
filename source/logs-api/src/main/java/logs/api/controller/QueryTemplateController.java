@@ -91,6 +91,11 @@ public class QueryTemplateController extends ABasicController {
     @PreAuthorize("hasRole('QTP_C')")
     @Transactional
     public ApiMessageDto<QueryTemplateDto> create(@Valid @RequestBody CreateQueryTemplateForm createQueryTemplateForm, BindingResult bindingResult) {
+        if (BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD.equals(createQueryTemplateForm.getType())
+                && createQueryTemplateForm.getCount() == null) {
+            throw new BadRequestException("Count is required when type is threshold");
+        }
+
         QueryTemplate queryTemplate = queryTemplateMapper.fromFormToEntity(createQueryTemplateForm);
         if (createQueryTemplateForm.getApplicationId() != null) {
             Applications applications = applicationsRepository.findById(createQueryTemplateForm.getApplicationId())
@@ -112,6 +117,11 @@ public class QueryTemplateController extends ABasicController {
     @PreAuthorize("hasRole('QTP_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdateQueryTemplateForm updateQueryTemplateForm, BindingResult bindingResult) {
+        if (BaseConstant.QUERY_TEMPLATE_TYPE_THRESHOLD.equals(updateQueryTemplateForm.getType())
+                && updateQueryTemplateForm.getCount() == null) {
+            throw new BadRequestException("Count is required when type is threshold");
+        }
+
         QueryTemplate queryTemplate = queryTemplateRepository.findById(updateQueryTemplateForm.getId())
                 .orElseThrow(() -> new NotFoundException("Query template not found", ErrorCode.QUERY_TEMPLATE_ERROR_NOT_FOUND));
 
