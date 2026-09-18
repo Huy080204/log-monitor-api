@@ -309,19 +309,6 @@ class NotificationRuleControllerTest {
     }
 
     @Test
-    void shouldThrowBadRequestWhenCreateItemQueryTemplateTypeIsOne() {
-        CreateNotificationRuleForm form = createForm(1L, "rule-1", List.of(itemForm(10L, 20L, null)));
-
-        when(notificationGroupRepository.findById(1L)).thenReturn(Optional.of(comparisonGroup(1L)));
-        when(notificationRuleRepository.existsByNotificationGroupIdAndName(1L, "rule-1")).thenReturn(false);
-        when(applicationsRepository.findAllById(anyList())).thenReturn(List.of(application(10L)));
-        when(queryTemplateRepository.findAllById(anyList())).thenReturn(List.of(queryTemplate(20L, application(10L), 1)));
-
-        assertThatThrownBy(() -> controller.create(form, bindingResult))
-                .isInstanceOf(BadRequestException.class);
-    }
-
-    @Test
     void shouldCreateRuleWhenAllItemQueryTemplatesAreTypeTwo() {
         NotificationGroup group = comparisonGroup(1L);
         CreateNotificationRuleForm form = createForm(1L, "rule-1",
@@ -478,23 +465,6 @@ class NotificationRuleControllerTest {
 
         verify(notificationRuleItemRepository, never()).deleteAllByIdIn(any());
         verify(notificationRuleItemRepository).saveAll(anyList());
-    }
-
-    @Test
-    void shouldThrowBadRequestWhenUpdateItemQueryTemplateTypeIsOne() {
-        NotificationRule existingRule = new NotificationRule();
-        existingRule.setId(10L);
-        existingRule.setName("rule-10");
-        existingRule.setNotificationGroup(comparisonGroup(1L));
-
-        UpdateNotificationRuleForm form = updateForm(10L, "rule-10", List.of(updateItemForm(null, 10L, 20L, null)));
-
-        when(notificationRuleRepository.findById(10L)).thenReturn(Optional.of(existingRule));
-        when(applicationsRepository.findAllById(anyList())).thenReturn(List.of(application(10L)));
-        when(queryTemplateRepository.findAllById(anyList())).thenReturn(List.of(queryTemplate(20L, application(10L), 1)));
-
-        assertThatThrownBy(() -> controller.update(form, bindingResult))
-                .isInstanceOf(BadRequestException.class);
     }
 
     @Test

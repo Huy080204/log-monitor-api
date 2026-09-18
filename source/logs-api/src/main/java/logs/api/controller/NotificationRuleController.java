@@ -169,7 +169,7 @@ public class NotificationRuleController extends ABasicController {
             NotificationRuleItemForm itemForm = itemForms.get(index);
             Applications application = applicationsById.get(itemForm.getApplicationId());
             QueryTemplate queryTemplate = queryTemplateById.get(itemForm.getQueryTemplateId());
-            validateItem(application, queryTemplate);
+            validateApplicationMatch(application, queryTemplate);
 
             NotificationRuleItem notificationRuleItem = new NotificationRuleItem();
             notificationRuleItem.setApplication(application);
@@ -194,7 +194,7 @@ public class NotificationRuleController extends ABasicController {
             UpdateNotificationRuleItemForm itemForm = itemForms.get(index);
             Applications application = applicationsById.get(itemForm.getApplicationId());
             QueryTemplate queryTemplate = queryTemplateById.get(itemForm.getQueryTemplateId());
-            validateItem(application, queryTemplate);
+            validateApplicationMatch(application, queryTemplate);
 
             NotificationRuleItem notificationRuleItem;
             if (itemForm.getId() != null) {
@@ -239,12 +239,9 @@ public class NotificationRuleController extends ABasicController {
         return queryTemplateById;
     }
 
-    private void validateItem(Applications application, QueryTemplate queryTemplate) {
+    private void validateApplicationMatch(Applications application, QueryTemplate queryTemplate) {
         if (queryTemplate.getApplication() != null && !Objects.equals(queryTemplate.getApplication().getId(), application.getId())) {
             throw new BadRequestException("Query template application mismatch", ErrorCode.NOTIFICATION_GROUP_ERROR_CHECK_TYPE_MISMATCH);
-        }
-        if (!BaseConstant.QUERY_TEMPLATE_TYPE_CUSTOM.equals(queryTemplate.getType())) {
-            throw new BadRequestException("Query template type must be custom");
         }
     }
 
