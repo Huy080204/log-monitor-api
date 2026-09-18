@@ -27,6 +27,7 @@ public interface QueryTemplateMapper {
     @Mapping(source = "timeFrame", target = "timeFrame")
     @Mapping(source = "note", target = "note")
     @Mapping(source = "application", target = "application", qualifiedByName = "fromEntityToApplicationsDto")
+    @Mapping(source = "type", target = "type")
     @Mapping(source = "modifiedDate", target = "modifiedDate")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "status", target = "status")
@@ -42,6 +43,7 @@ public interface QueryTemplateMapper {
     @Mapping(source = "count", target = "count")
     @Mapping(source = "timeFrame", target = "timeFrame")
     @Mapping(source = "note", target = "note")
+    @Mapping(source = "type", target = "type")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminCreateMapping")
     QueryTemplate fromFormToEntity(CreateQueryTemplateForm createQueryTemplateForm);
@@ -51,6 +53,7 @@ public interface QueryTemplateMapper {
     @Mapping(source = "count", target = "count")
     @Mapping(source = "timeFrame", target = "timeFrame", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     @Mapping(source = "note", target = "note")
+    @Mapping(source = "type", target = "type")
     @BeanMapping(ignoreByDefault = true)
     @Named("adminUpdateMapping")
     void updateEntityFromForm(UpdateQueryTemplateForm updateQueryTemplateForm, @MappingTarget QueryTemplate queryTemplate);

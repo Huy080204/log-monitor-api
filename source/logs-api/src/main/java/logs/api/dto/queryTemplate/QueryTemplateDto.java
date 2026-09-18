@@ -25,4 +25,7 @@ public class QueryTemplateDto extends ABasicAdminDto {
 
     @Schema(name = "application")
     private ApplicationsDto application;
+
+    @Schema(name = "type")
+    private Integer type;
 }

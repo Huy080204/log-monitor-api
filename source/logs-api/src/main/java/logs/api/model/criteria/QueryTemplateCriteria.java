@@ -31,6 +31,7 @@ public class QueryTemplateCriteria implements Serializable {
     private Boolean isGlobal; // null application
     private Boolean includeGlobal; // include null-application
     private Long requiredId;
+    private Integer type;
 
     @Schema(hidden = true)
     public Specification<QueryTemplate> getCriteria() {
@@ -60,6 +61,10 @@ public class QueryTemplateCriteria implements Serializable {
                         Join<QueryTemplate, Applications> joinApplication = root.join("application", JoinType.INNER);
                         predicates.add(cb.equal(joinApplication.get("id"), getApplicationId()));
                     }
+                }
+
+                if (getType() != null) {
+                    predicates.add(cb.equal(root.get("type"), getType()));
                 }
 
                 if (Boolean.TRUE.equals(getIsGlobal())) {
