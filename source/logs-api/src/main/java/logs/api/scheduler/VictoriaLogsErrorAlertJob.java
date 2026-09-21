@@ -234,6 +234,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
             for (Long templateId : enabledTemplateIds) {
                 QueryTemplate queryTemplate = queryTemplateById.get(templateId);
                 int count = row.count(String.valueOf(templateId));
+                log.info("App [{}], query [{}]: count {}", appName, queryTemplate.getName(), count);
                 if (count >= queryTemplate.getCount()) {
                     breachLinesByApp.computeIfAbsent(appName, k -> new ArrayList<>())
                             .add(String.format("  • `%s`: %d", queryTemplate.getName(), count));
@@ -246,11 +247,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
     // Chỉ cần MỘT cặp khớp điều kiện là gửi thông báo
     private boolean shouldAlert(NotificationRule rule, List<NotificationRuleItem> items,
                                 Map<String, VictoriaLogsStatsDto> rowByItemId) {
-        int[] counts = resolveCounts(items, rowByItemId);
+        List<String> itemLines = new ArrayList<>();
+        int[] counts = resolveCounts(items, rowByItemId, itemLines);
         // Không có log nào trong cửa sổ: mọi count đều 0 nên EQ/GTE/LTE sẽ khớp và bắn cảnh báo giả
         // mỗi chu kỳ. Rule chỉ có MỘT SỐ vế bằng 0 thì vẫn xét — đó là ca "app ngừng ghi log" cần bắt.
         if (isAllZero(counts)) {
-            log.debug("Notification rule [{}] has no log in the last window, skip comparison", rule.getName());
+            log.info("Notification rule [{}]: NO ALERT (all counts are 0)", rule.getName());
             return false;
         }
 
@@ -267,6 +269,8 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 shouldAlert = true;
             }
         }
+        log.info("Notification rule [{}]: {}\n{}", rule.getName(), shouldAlert ? "ALERT" : "NO ALERT",
+                String.join("\n", itemLines));
         return shouldAlert;
     }
 
@@ -280,12 +284,15 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     // Resolve each item's count once so the pair loop above is pure array indexing
-    private int[] resolveCounts(List<NotificationRuleItem> items, Map<String, VictoriaLogsStatsDto> rowByItemId) {
+    private int[] resolveCounts(List<NotificationRuleItem> items, Map<String, VictoriaLogsStatsDto> rowByItemId,
+                                List<String> itemLines) {
         int[] counts = new int[items.size()];
         for (int i = 0; i < items.size(); i++) {
             NotificationRuleItem item = items.get(i);
             VictoriaLogsStatsDto row = rowByItemId.get(String.valueOf(item.getId()));
             counts[i] = row == null ? 0 : row.firstCount();
+            itemLines.add(String.format("  app [%s], query [%s], count %d",
+                    item.getApplication().getName(), item.getQueryTemplate().getName(), counts[i]));
         }
         return counts;
     }
