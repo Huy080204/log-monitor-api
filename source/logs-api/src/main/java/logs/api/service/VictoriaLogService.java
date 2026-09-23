@@ -34,8 +34,8 @@ public class VictoriaLogService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${victorialogs.api.url}")
-    private String victoriaLogsApiUrl;
+    @Value("${victorialogs.vm.ui.url}")
+    private String victoriaLogsVmUiUrl;
 
     // Build LogsQL: time window + application:in(...) + one count() if per distinct QueryTemplate
     public String buildQuery(Integer timeFrameMinutes, String filterQuery, Set<String> victoriaAppIds, Collection<QueryTemplate> queryTemplates) {
@@ -112,7 +112,7 @@ public class VictoriaLogService {
 
     // Build a vmui link: domain + path + encoded query, plus an app stream filter (if any) and the relative time range
     public String buildExploreLink(String logsQl, String victoriaAppId, Integer timeFrameMinutes) {
-        StringBuilder link = new StringBuilder(victoriaLogsApiUrl)
+        StringBuilder link = new StringBuilder(victoriaLogsVmUiUrl)
                 .append(BaseConstant.VICTORIALOGS_VMUI_QUERY_PATH)
                 .append(URLEncoder.encode(logsQl, StandardCharsets.UTF_8));
         String streamFilter = buildStreamFilterJson(victoriaAppId);
