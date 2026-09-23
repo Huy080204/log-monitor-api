@@ -48,9 +48,26 @@ public class NotificationService {
                 : value.substring(0, maxLength - ELLIPSIS.length()) + ELLIPSIS;
     }
 
+    // Escape the 3 characters that break both Telegram HTML and Slack mrkdwn markup
+    public String escapeText(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    // Wrap a display name as a clickable link in the target channel's own markup syntax
+    public String formatLink(Integer channelType, String url, String text) {
+        String safeText = escapeText(text);
+        if (BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM.equals(channelType)) {
+            return String.format("<a href=\"%s\">%s</a>", url, safeText);
+        }
+        return String.format("<%s|%s>", url, safeText);
+    }
+
     // Split one app's breach lines into chunks only if they alone exceed the limit
     public List<String> buildAppChunks(String app, List<String> breachLines, int budget) {
-        String header = String.format("- %s", app);
+        String header = String.format("- %s", escapeText(app));
         int headerLength = header.length();
 
         List<String> chunks = new ArrayList<>();

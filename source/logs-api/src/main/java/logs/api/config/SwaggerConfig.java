@@ -10,9 +10,9 @@ import org.springframework.context.annotation.Profile;
 public class SwaggerConfig {
 
     @Bean
-    public GroupedOpenApi storeAuthApi() {
+    public GroupedOpenApi logsApi() {
         return GroupedOpenApi.builder()
-                .group("spring-base-api")
+                .group("logs-api")
                 .packagesToScan("logs.api.controller")
                 .build();
     }
