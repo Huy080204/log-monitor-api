@@ -240,9 +240,10 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 if (count >= queryTemplate.getCount()) {
                     String exploreQuery = victoriaLogService.buildExploreQuery(activeGroup.getFilterQuery(), queryTemplate);
                     String exploreLink = victoriaLogService.buildExploreLink(exploreQuery, row.getApplication(), activeGroup.getTimeFrame());
-                    String queryLabel = notificationService.formatLink(channelType, exploreLink, queryTemplate.getName());
+                    String label = String.format("%s: %d", queryTemplate.getName(), count);
+                    String breachLine = notificationService.formatLink(channelType, exploreLink, label);
                     breachLinesByApp.computeIfAbsent(appName, k -> new ArrayList<>())
-                            .add(String.format("  • %s: %d", queryLabel, count));
+                            .add("  • " + breachLine);
                 }
             }
         }
