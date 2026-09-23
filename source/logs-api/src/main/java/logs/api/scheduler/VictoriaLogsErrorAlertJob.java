@@ -95,7 +95,7 @@ public class VictoriaLogsErrorAlertJob implements Job {
 
         Map<String, VictoriaLogsStatsDto> rowByApp = fetchRowsByApp(activeGroup,
                 enabledTemplateIdsByApp.keySet(), queryTemplateById.values());
-        Map<String, List<String>> breachLinesByApp = buildBreachLines(rowByApp, queryTemplateById,
+        Map<String, List<String>> breachLinesByApp = buildBreachLines(activeGroup, rowByApp, queryTemplateById,
                 enabledTemplateIdsByApp, appNameByVictoriaAppId);
         if (breachLinesByApp.isEmpty()) {
             log.debug("No app crossed any notification query threshold in the last {}m", activeGroup.getTimeFrame());
@@ -220,10 +220,12 @@ public class VictoriaLogsErrorAlertJob implements Job {
     }
 
     // Keep only (app, template) pairs enabled in enabledTemplateIdsByApp whose count hit the threshold
-    private Map<String, List<String>> buildBreachLines(Map<String, VictoriaLogsStatsDto> rowByApp,
+    private Map<String, List<String>> buildBreachLines(NotificationGroup activeGroup,
+                                                       Map<String, VictoriaLogsStatsDto> rowByApp,
                                                        Map<Long, QueryTemplate> queryTemplateById,
                                                        Map<String, Set<Long>> enabledTemplateIdsByApp,
                                                        Map<String, String> appNameByVictoriaAppId) {
+        Integer channelType = activeGroup.getNotificationChannel().getType();
         Map<String, List<String>> breachLinesByApp = new LinkedHashMap<>();
         for (VictoriaLogsStatsDto row : rowByApp.values()) {
             Set<Long> enabledTemplateIds = enabledTemplateIdsByApp.get(row.getApplication());
@@ -236,8 +238,11 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 int count = row.count(String.valueOf(templateId));
                 log.info("App [{}], query [{}]: count {}", appName, queryTemplate.getName(), count);
                 if (count >= queryTemplate.getCount()) {
+                    String exploreQuery = victoriaLogService.buildExploreQuery(activeGroup.getFilterQuery(), queryTemplate);
+                    String exploreLink = victoriaLogService.buildExploreLink(exploreQuery, row.getApplication(), activeGroup.getTimeFrame());
+                    String queryLabel = notificationService.formatLink(channelType, exploreLink, queryTemplate.getName());
                     breachLinesByApp.computeIfAbsent(appName, k -> new ArrayList<>())
-                            .add(String.format("  • `%s`: %d", queryTemplate.getName(), count));
+                            .add(String.format("  • %s: %d", queryLabel, count));
                 }
             }
         }

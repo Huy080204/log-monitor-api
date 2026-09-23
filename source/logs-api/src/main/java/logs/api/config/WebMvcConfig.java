@@ -29,8 +29,6 @@ import java.util.List;
 @Configuration
 @EnableWebMvc
 public class WebMvcConfig implements WebMvcConfigurer {
-    public static final String DATE_TIME_FORMAT = "dd/MM/yyyy HH:mm:ss";
-
     @Autowired
     LogInterceptor logInterceptor;
 
@@ -67,7 +65,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        SimpleDateFormat format = new SimpleDateFormat(WebMvcConfig.DATE_TIME_FORMAT);
+        SimpleDateFormat format = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
         objectMapper.setDateFormat(format);
         return objectMapper;
     }

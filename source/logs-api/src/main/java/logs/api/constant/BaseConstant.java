@@ -33,6 +33,8 @@ public class BaseConstant {
 
     // VictoriaLogs error-alert scheduler query config
     public static final String VICTORIALOGS_QUERY_APP_FIELD = "application";
+    // Deep-link straight into a saved LogsQL query
+    public static final String VICTORIALOGS_VMUI_QUERY_PATH = "/select/vmui/?#/?query=";
 
     // NotificationGroup check type
     public static final Integer NOTIFICATION_GROUP_CHECK_TYPE_THRESHOLD = 1;

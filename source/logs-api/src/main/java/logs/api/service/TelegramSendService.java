@@ -25,6 +25,7 @@ public class TelegramSendService {
             Map<String, Object> payload = new HashMap<>();
             payload.put("chat_id", chatId);
             payload.put("text", text);
+            payload.put("parse_mode", "HTML");
             String response = feignTelegramService.sendMessage(token, FeignConst.LOGIN_TYPE_NO_AUTH, payload);
             log.info("Telegram sendMessage response: {}", response);
         } catch (Exception e) {

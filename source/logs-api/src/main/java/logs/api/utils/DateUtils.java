@@ -1,6 +1,7 @@
 package logs.api.utils;
 
 
+import logs.api.constant.BaseConstant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.ParseException;
@@ -14,9 +15,6 @@ import java.util.TimeZone;
 @Slf4j
 public class DateUtils {
 
-	public static final String FORMAT_DATE = "dd/MM/yyyy HH:mm:ss";
-
-
 	private DateUtils(){
 
 	}
@@ -28,7 +26,7 @@ public class DateUtils {
     }
 	
 	public static String formatDate(Date date) {
-		SimpleDateFormat format = new SimpleDateFormat(FORMAT_DATE);
+		SimpleDateFormat format = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
 		return format.format(date);
 	}
 
@@ -50,7 +48,7 @@ public class DateUtils {
 	public static Date converDate(String date) {
 		
 		try {
-			SimpleDateFormat format = new SimpleDateFormat(FORMAT_DATE);
+			SimpleDateFormat format = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
 			return format.parse(date);
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);
@@ -172,9 +170,9 @@ public class DateUtils {
 
 	//system is UTC, convert from utc to
 	public static Date convertToUtc(Date source, TimeZone oldTimeZone) throws ParseException {
-		SimpleDateFormat simpleDateFormatUtc = new SimpleDateFormat(FORMAT_DATE);
+		SimpleDateFormat simpleDateFormatUtc = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
 
-		SimpleDateFormat oldTimezoneFormat = new SimpleDateFormat(FORMAT_DATE);
+		SimpleDateFormat oldTimezoneFormat = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
 		String date = oldTimezoneFormat.format(source);
 		oldTimezoneFormat.setTimeZone(oldTimeZone);
 
