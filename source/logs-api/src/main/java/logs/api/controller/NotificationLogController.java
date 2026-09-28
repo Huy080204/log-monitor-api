@@ -1,10 +1,8 @@
 package logs.api.controller;
 
 import logs.api.dto.ApiMessageDto;
-import logs.api.dto.ErrorCode;
 import logs.api.dto.ResponseListDto;
 import logs.api.dto.notificationLog.NotificationLogDto;
-import logs.api.exception.NotFoundException;
 import logs.api.mapper.NotificationLogMapper;
 import logs.api.model.NotificationLog;
 import logs.api.model.criteria.NotificationLogCriteria;
@@ -19,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,14 +33,6 @@ public class NotificationLogController extends ABasicController {
 
     @Autowired
     private NotificationLogMapper notificationLogMapper;
-
-    @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('NOL_V')")
-    public ApiMessageDto<NotificationLogDto> get(@PathVariable Long id) {
-        NotificationLog notificationLog = notificationLogRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Not found notification log!", ErrorCode.NOTIFICATION_LOG_ERROR_NOT_FOUND));
-        return makeSuccessResponse(notificationLogMapper.fromEntityToNotificationLogDto(notificationLog), "Get notification log success");
-    }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('NOL_L')")

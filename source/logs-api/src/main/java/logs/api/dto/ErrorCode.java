@@ -57,11 +57,6 @@ public class ErrorCode {
     public static final String NOTIFICATION_QUERY_ERROR_APPLICATION_MISMATCH = "ERROR-NOTIFICATION-QUERY-0001";
 
     /**
-     * Starting error code NotificationLog
-     */
-    public static final String NOTIFICATION_LOG_ERROR_NOT_FOUND = "ERROR-NOTIFICATION-LOG-0000";
-
-    /**
      * Starting error code Applications
      */
     public static final String APPLICATIONS_ERROR_NOT_FOUND = "ERROR-APPLICATIONS-0000";
