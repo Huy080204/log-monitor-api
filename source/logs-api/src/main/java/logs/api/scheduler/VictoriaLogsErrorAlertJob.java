@@ -147,10 +147,13 @@ public class VictoriaLogsErrorAlertJob implements Job {
             return;
         }
 
+        Integer channelType = activeGroup.getNotificationChannel().getType();
         Map<String, List<String>> alertingRules = new LinkedHashMap<>();
         for (NotificationRule rule : usableRules) {
-            if (shouldAlert(rule, itemsByRuleId.get(rule.getId()), rowByItemId)) {
-                alertingRules.put(rule.getName(), Collections.emptyList());
+            List<NotificationRuleItem> items = itemsByRuleId.get(rule.getId());
+            if (shouldAlert(rule, items, rowByItemId)) {
+                String header = buildComparisonRuleHeader(activeGroup, channelType, rule, items);
+                alertingRules.put(header, Collections.emptyList());
             }
         }
         if (alertingRules.isEmpty()) {
@@ -165,6 +168,17 @@ public class VictoriaLogsErrorAlertJob implements Job {
             log.info("Successfully created {} comparison notifications for {} alerting rule(s)",
                     notifications.size(), alertingRules.size());
         }
+    }
+
+    // Wrap the rule name as a link to the same union query used to evaluate it
+    private String buildComparisonRuleHeader(NotificationGroup activeGroup, Integer channelType,
+                                             NotificationRule rule, List<NotificationRuleItem> items) {
+        String query = victoriaLogService.buildComparisonExploreQuery(activeGroup.getFilterQuery(), items);
+        Set<String> victoriaAppIds = items.stream()
+                .map(item -> item.getApplication().getVictoriaAppId())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        String exploreLink = victoriaLogService.buildExploreLink(query, victoriaAppIds, activeGroup.getTimeFrame());
+        return notificationService.formatLink(channelType, exploreLink, rule.getName());
     }
 
     private Map<Long, List<NotificationRuleItem>> loadItemsByRuleId(List<NotificationRule> rules) {
@@ -233,16 +247,18 @@ public class VictoriaLogsErrorAlertJob implements Job {
                 continue;
             }
             String appName = appNameByVictoriaAppId.getOrDefault(row.getApplication(), row.getApplication());
+            String header = notificationService.escapeText(appName);
             for (Long templateId : enabledTemplateIds) {
                 QueryTemplate queryTemplate = queryTemplateById.get(templateId);
                 int count = row.count(String.valueOf(templateId));
                 log.info("App [{}], query [{}]: count {}", appName, queryTemplate.getName(), count);
                 if (count >= queryTemplate.getCount()) {
                     String exploreQuery = victoriaLogService.buildExploreQuery(activeGroup.getFilterQuery(), queryTemplate);
-                    String exploreLink = victoriaLogService.buildExploreLink(exploreQuery, row.getApplication(), activeGroup.getTimeFrame());
+                    String exploreLink = victoriaLogService.buildExploreLink(exploreQuery,
+                            Collections.singletonList(row.getApplication()), activeGroup.getTimeFrame());
                     String label = String.format("%s: %d", queryTemplate.getName(), count);
                     String breachLine = notificationService.formatLink(channelType, exploreLink, label);
-                    breachLinesByApp.computeIfAbsent(appName, k -> new ArrayList<>())
+                    breachLinesByApp.computeIfAbsent(header, k -> new ArrayList<>())
                             .add("  • " + breachLine);
                 }
             }
