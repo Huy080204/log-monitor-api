@@ -1,6 +1,8 @@
 package logs.api.config.quartz;
 
+import logs.api.scheduler.NotificationLogCleanupJob;
 import logs.api.scheduler.PendingNotificationDispatchJob;
+import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
@@ -12,6 +14,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 
+import java.util.TimeZone;
+
 @Configuration
 public class QuartzConfig {
 
@@ -20,6 +24,9 @@ public class QuartzConfig {
 
     @Value("${notification.dispatch.interval-seconds}")
     private int notificationDispatchIntervalSeconds;
+
+    @Value("${notification.log.cleanup.cron}")
+    private String notificationLogCleanupCron;
 
     @Bean
     public SchedulerFactoryBeanCustomizer jobFactoryCustomizer() {
@@ -42,6 +49,24 @@ public class QuartzConfig {
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                         .withIntervalInSeconds(notificationDispatchIntervalSeconds)
                         .repeatForever())
+                .build();
+    }
+
+    @Bean
+    public JobDetailFactoryBean notificationLogCleanupJobDetail() {
+        JobDetailFactoryBean jobDetailFactoryBean = new JobDetailFactoryBean();
+        jobDetailFactoryBean.setJobClass(NotificationLogCleanupJob.class);
+        jobDetailFactoryBean.setDurability(true);
+        return jobDetailFactoryBean;
+    }
+
+    @Bean
+    public Trigger notificationLogCleanupTrigger(JobDetail notificationLogCleanupJobDetail) {
+        return TriggerBuilder.newTrigger()
+                .withIdentity("notification-log-cleanup-trigger", "system")
+                .forJob(notificationLogCleanupJobDetail)
+                .withSchedule(CronScheduleBuilder.cronSchedule(notificationLogCleanupCron)
+                        .inTimeZone(TimeZone.getTimeZone("UTC")))
                 .build();
     }
 }
