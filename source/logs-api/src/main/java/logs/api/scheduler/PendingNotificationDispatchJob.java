@@ -9,17 +9,18 @@ import logs.api.service.NotificationService;
 import logs.api.service.SlackService;
 import logs.api.service.TelegramSendService;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Component
+@DisallowConcurrentExecution
 @Slf4j
-public class NotificationScheduler {
+public class PendingNotificationDispatchJob implements Job {
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -33,8 +34,12 @@ public class NotificationScheduler {
     @Autowired
     private SlackService slackService;
 
-    @Scheduled(fixedDelay = 60000, zone = "UTC")
-    public void sendPendingNotifications() {
+    @Override
+    public void execute(JobExecutionContext context) {
+        sendPendingNotifications();
+    }
+
+    private void sendPendingNotifications() {
         Notification telegramNotification = notificationRepository
                 .findFirstByNotificationGroupNotificationChannelType(BaseConstant.NOTIFICATION_CHANNEL_TYPE_TELEGRAM);
         Notification slackNotification = notificationRepository
