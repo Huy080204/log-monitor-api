@@ -1,7 +1,7 @@
 package logs.api.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.web.savedrequest.Enumerator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;

@@ -1,6 +1,6 @@
 package logs.api.utils;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 public class StringUtils {
     public static String generateRandomString(int length) {

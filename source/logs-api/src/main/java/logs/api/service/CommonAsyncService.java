@@ -16,28 +16,12 @@ import java.util.Arrays;
 public class CommonAsyncService {
 
     @Autowired
-    private EmailService emailService;
-
-    @Autowired
     RestTemplate restTemplate;
 
     @Autowired
     @Qualifier("threadPoolExecutor")
     @Getter
     private TaskExecutor taskExecutor;
-
-    @Async
-    public void sendEmail(String email, String msg, String subject, boolean html){
-
-        Runnable task3 = () -> {
-            try {
-                emailService.sendEmail(email,msg,subject,html);
-            } catch (Exception e) {
-                log.error(e.getMessage(),e);
-            }
-        };
-        taskExecutor.execute(task3);
-    }
 
     @Async
     public void pushToFirebase(String url, String data, HttpMethod httpMethod){

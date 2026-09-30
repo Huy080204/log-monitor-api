@@ -1,14 +1,12 @@
 package logs.api.config;
 
-import logs.api.component.LogInterceptor;
-import logs.api.constant.BaseConstant;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import logs.api.component.LogInterceptor;
+import logs.api.component.SortParameterInterceptor;
+import logs.api.constant.BaseConstant;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.format.datetime.DateFormatter;
@@ -17,7 +15,6 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -30,12 +27,16 @@ import java.util.List;
 @EnableWebMvc
 public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
-    LogInterceptor logInterceptor;
+    private LogInterceptor logInterceptor;
+
+    @Autowired
+    private SortParameterInterceptor sortParameterInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         String[] exclusive = {"/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"};
         registry.addInterceptor(logInterceptor).addPathPatterns("/**").excludePathPatterns(exclusive);
+        registry.addInterceptor(sortParameterInterceptor).addPathPatterns("/**");
     }
 
     @Override
@@ -49,7 +50,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         builder.indentOutput(true);
         converters.add(new ByteArrayHttpMessageConverter());
         converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
-        converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
         converters.add(new ResourceHttpMessageConverter());
     }
 
@@ -58,15 +58,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
         DateFormatter dateFormatter = new DateFormatter(BaseConstant.DATE_TIME_FORMAT);
         dateFormatter.setLenient(true);
         registry.addFormatter(dateFormatter);
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        SimpleDateFormat format = new SimpleDateFormat(BaseConstant.DATE_TIME_FORMAT);
-        objectMapper.setDateFormat(format);
-        return objectMapper;
     }
 }
