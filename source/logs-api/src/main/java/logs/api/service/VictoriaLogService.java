@@ -94,6 +94,31 @@ public class VictoriaLogService {
         return segment.toString();
     }
 
+    // Same union shape as buildComparisonQuery, but no `_time:` prefix — vmui gets the range from g0.range_input
+    public String buildComparisonExploreQuery(String filterQuery, List<NotificationRuleItem> items) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < items.size(); i++) {
+            String segment = buildComparisonExploreSegment(filterQuery, items.get(i));
+            if (i == 0) {
+                result.append(segment);
+            } else {
+                result.append(" | union ( ").append(segment).append(" )");
+            }
+        }
+        return result.toString();
+    }
+
+    private String buildComparisonExploreSegment(String filterQuery, NotificationRuleItem item) {
+        StringBuilder segment = new StringBuilder();
+        if (filterQuery != null && !filterQuery.trim().isEmpty()) {
+            segment.append(filterQuery.trim()).append(" ");
+        }
+        segment.append(String.format("{application=\"%s\"}", item.getApplication().getVictoriaAppId()));
+        segment.append(" ").append(item.getQueryTemplate().getQuery().trim());
+        segment.append(" | format \"").append(item.getId()).append("\" as item_id");
+        return segment.toString();
+    }
+
     // Run a LogsQL statement against VictoriaLogs
     public List<VictoriaLogsStatsDto> query(String logsQl) {
         return feignVictoriaLogsService.query(FeignConst.LOGIN_TYPE_NO_AUTH, VictoriaLogsQueryForm.of(logsQl));
@@ -110,17 +135,21 @@ public class VictoriaLogService {
         return query.toString();
     }
 
-    // Build a vmui link: domain + path + encoded query, plus an app stream filter (if any) and the relative time range
-    public String buildExploreLink(String logsQl, String victoriaAppId, Integer timeFrameMinutes) {
+    // Build a vmui link: query + one stream filter per app + time range; `+`→`%20` since vmui decodes client-side
+    public String buildExploreLink(String logsQl, Collection<String> victoriaAppIds, Integer timeFrameMinutes) {
         StringBuilder link = new StringBuilder(victoriaLogsVmUiUrl)
                 .append(BaseConstant.VICTORIALOGS_VMUI_QUERY_PATH)
-                .append(URLEncoder.encode(logsQl, StandardCharsets.UTF_8));
-        String streamFilter = buildStreamFilterJson(victoriaAppId);
-        if (streamFilter != null) {
-            link.append("&extra_stream_filters=").append(URLEncoder.encode(streamFilter, StandardCharsets.UTF_8));
+                .append(URLEncoder.encode(logsQl, StandardCharsets.UTF_8).replace("+", "%20"));
+        if (victoriaAppIds != null) {
+            for (String victoriaAppId : victoriaAppIds) {
+                String streamFilter = buildStreamFilterJson(victoriaAppId);
+                if (streamFilter != null) {
+                    link.append("&extra_stream_filters=").append(URLEncoder.encode(streamFilter, StandardCharsets.UTF_8).replace("+", "%20"));
+                }
+            }
         }
-        link.append("&g0.range_input=").append(URLEncoder.encode(timeFrameMinutes + "m", StandardCharsets.UTF_8));
-        link.append("&g0.end_input=").append(URLEncoder.encode(Instant.now().truncatedTo(ChronoUnit.MILLIS).toString(), StandardCharsets.UTF_8));
+        link.append("&g0.range_input=").append(URLEncoder.encode(timeFrameMinutes + "m", StandardCharsets.UTF_8).replace("+", "%20"));
+        link.append("&g0.end_input=").append(URLEncoder.encode(Instant.now().truncatedTo(ChronoUnit.MILLIS).toString(), StandardCharsets.UTF_8).replace("+", "%20"));
         return link.toString();
     }
 

@@ -65,18 +65,18 @@ public class NotificationService {
         return String.format("<%s|%s>", url, safeText);
     }
 
-    // Split one app's breach lines into chunks only if they alone exceed the limit
-    public List<String> buildAppChunks(String app, List<String> breachLines, int budget) {
-        String header = String.format("- %s", escapeText(app));
-        int headerLength = header.length();
+    // Split one header's lines into chunks if they alone exceed the limit; `header` must already be display-ready (escaped or linked)
+    public List<String> buildHeaderChunks(String header, List<String> lines, int budget) {
+        String headerLine = String.format("- %s", header);
+        int headerLength = headerLine.length();
 
         List<String> chunks = new ArrayList<>();
-        StringBuilder chunk = new StringBuilder(header);
-        for (String breachLine : breachLines) {
-            String line = truncate(breachLine, budget - headerLength - 1);
+        StringBuilder chunk = new StringBuilder(headerLine);
+        for (String rawLine : lines) {
+            String line = truncate(rawLine, budget - headerLength - 1);
             if (chunk.length() > headerLength && chunk.length() + 1 + line.length() > budget) {
                 chunks.add(chunk.toString());
-                chunk = new StringBuilder(header);
+                chunk = new StringBuilder(headerLine);
             }
             chunk.append("\n").append(line);
         }
@@ -84,12 +84,12 @@ public class NotificationService {
         return chunks;
     }
 
-    // Pack app chunks into messages, starting a new message once the limit is hit
-    public List<String> packBodies(List<String> apps, Map<String, List<String>> breachLinesByApp, int budget) {
+    // Pack header chunks into messages, starting a new message once the limit is hit
+    public List<String> packBodies(List<String> headers, Map<String, List<String>> linesByHeader, int budget) {
         List<String> bodies = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        for (String app : apps) {
-            for (String chunk : buildAppChunks(app, breachLinesByApp.get(app), budget)) {
+        for (String header : headers) {
+            for (String chunk : buildHeaderChunks(header, linesByHeader.get(header), budget)) {
                 if (current.length() > 0 && current.length() + 1 + chunk.length() > budget) {
                     bodies.add(current.toString());
                     current = new StringBuilder();
