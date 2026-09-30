@@ -2,7 +2,7 @@ package logs.api.jwt;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import logs.api.jwt.dto.AttributeDto;
 import logs.api.utils.ZipUtils;
 
