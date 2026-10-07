@@ -261,10 +261,10 @@ public class VictoriaLogsErrorAlertJob implements Job {
                     String exploreQuery = victoriaLogService.buildExploreQuery(activeGroup.getFilterQuery(), queryTemplate);
                     String exploreLink = victoriaLogService.buildExploreLink(exploreQuery,
                             Collections.singletonList(row.getApplication()), activeGroup.getTimeFrame());
+                    String label = String.format("%s: %d", queryTemplate.getName(), count);
                     notificationLogRepository.save(NotificationLog.builder()
                             .appId(application != null ? application.getId() : null).appName(appName)
-                            .errorName(queryTemplate.getName()).link(exploreLink).build());
-                    String label = String.format("%s: %d", queryTemplate.getName(), count);
+                            .errorName(label).link(exploreLink).build());
                     String breachLine = notificationService.formatLink(channelType, exploreLink, label);
                     breachLinesByApp.computeIfAbsent(header, k -> new ArrayList<>())
                             .add("  • " + breachLine);

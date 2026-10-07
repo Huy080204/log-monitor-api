@@ -22,11 +22,11 @@
             <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
                 <!--                <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>-->
                 <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.json</fileNamePattern>
-                <!-- each archived file, size max 10MB -->
+                <!-- each archived file, size max 100MB -->
                 <maxFileSize>100MB</maxFileSize>
                 <!-- total size of all archive files, if total size > 2GB, it will delete old archived file -->
                 <totalSizeCap>2GB</totalSizeCap>
-                <!-- 60 days to keep -->
+                <!-- 2 days to keep -->
                 <maxHistory>2</maxHistory>
             </rollingPolicy>
 

@@ -7,7 +7,7 @@ import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.*;
+import jakarta.persistence.criteria.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

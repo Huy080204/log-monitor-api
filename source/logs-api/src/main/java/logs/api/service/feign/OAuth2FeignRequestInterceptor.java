@@ -4,12 +4,12 @@ import logs.api.service.impl.UserServiceImpl;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Objects;
 
 @Slf4j
@@ -34,7 +34,7 @@ public class OAuth2FeignRequestInterceptor implements RequestInterceptor {
             if (Objects.equals(loginType, FeignConst.LOGIN_TYPE_INTERNAL)) {
                 String auth = internalAuthUsername + ":" + internalAuthPassword;
                 log.error("-----------> internal = " + auth);
-                byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
+                byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
                 template.header(AUTHORIZATION_HEADER, String.format("%s %s", BASIC_AUTH_TYPE, new String(encodedAuth)));
             } else if (Objects.equals(loginType, FeignConst.LOGIN_TYPE_NO_AUTH)) {
                 // external/third-party API

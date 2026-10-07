@@ -2,17 +2,15 @@ package logs.api.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import logs.api.constant.DatabaseConstant;
+import logs.api.service.id.SnowflakeGeneratedId;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import java.util.Date;
 
 @MappedSuperclass
@@ -20,8 +18,7 @@ import java.util.Date;
 @Setter
 public abstract class Auditable<T> extends ReuseId {
     @Id
-    @GeneratedValue(generator = DatabaseConstant.APP_ID_GENERATOR_NAME)
-    @GenericGenerator(name = DatabaseConstant.APP_ID_GENERATOR_NAME, strategy = DatabaseConstant.APP_ID_GENERATOR_STRATEGY)
+    @SnowflakeGeneratedId
     private Long id;
 
     @CreatedBy

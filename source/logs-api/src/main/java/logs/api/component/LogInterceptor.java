@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 @Slf4j
@@ -57,7 +57,7 @@ public class LogInterceptor implements HandlerInterceptor {
     private static String getUrl(HttpServletRequest req) {
         String reqUrl = req.getRequestURL().toString();
         String queryString = req.getQueryString();   // d=789
-        if (!StringUtils.isEmpty(queryString)) {
+        if (StringUtils.hasLength(queryString)) {
             reqUrl += "?" + queryString;
         }
         return reqUrl;

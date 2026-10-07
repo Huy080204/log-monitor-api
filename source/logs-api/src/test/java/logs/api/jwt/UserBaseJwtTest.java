@@ -17,4 +17,13 @@ class UserBaseJwtTest {
         assertThat(jwt.getAccountId()).isEqualTo(7L);
         assertThat(jwt.getAttributeDto().getIsSuperAdmin()).isTrue();
     }
+
+    @Test
+    void shouldSetTenantIdWhenTokenHasTwelveParts() {
+        String raw = "7|app|<>|kind|perm|<>|1|admin|<>|<>|{}|tenant-1";
+
+        UserBaseJwt jwt = UserBaseJwt.decode(ZipUtils.zipString(raw));
+
+        assertThat(jwt.getTenantId()).isEqualTo("tenant-1");
+    }
 }

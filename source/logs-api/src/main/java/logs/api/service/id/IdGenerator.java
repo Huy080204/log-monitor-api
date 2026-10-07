@@ -22,6 +22,11 @@ public class IdGenerator implements IdentifierGenerator {
         return SnowFlakeIdService.getInstance().nextId();
     }
 
+    @Override
+    public boolean allowAssignedIdentifiers() {
+        return true;
+    }
+
     public Long nextId(){
         return SnowFlakeIdService.getInstance().nextId();
     }

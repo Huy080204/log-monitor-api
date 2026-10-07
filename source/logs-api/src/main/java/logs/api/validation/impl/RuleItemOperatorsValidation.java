@@ -3,8 +3,8 @@ package logs.api.validation.impl;
 import logs.api.form.notificationRule.NotificationRuleItemForm;
 import logs.api.validation.RuleItemOperators;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.List;
 
 public class RuleItemOperatorsValidation implements ConstraintValidator<RuleItemOperators, List<? extends NotificationRuleItemForm>> {

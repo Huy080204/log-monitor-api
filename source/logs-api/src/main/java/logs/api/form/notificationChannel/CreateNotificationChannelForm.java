@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.validation.NotificationChannelType;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 @Schema

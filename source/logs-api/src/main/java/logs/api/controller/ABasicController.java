@@ -2,10 +2,6 @@ package logs.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import logs.api.dto.ApiMessageDto;
 import logs.api.dto.ResponseListDto;
 import logs.api.jwt.UserBaseJwt;
@@ -62,14 +58,6 @@ public class ABasicController {
     }
 
     public String getCurrentToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            OAuth2AuthenticationDetails oauthDetails =
-                    (OAuth2AuthenticationDetails) authentication.getDetails();
-            if (oauthDetails != null) {
-                return oauthDetails.getTokenValue();
-            }
-        }
-        return null;
+        return userService.getCurrentToken();
     }
 }
