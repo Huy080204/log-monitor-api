@@ -26,7 +26,7 @@ import logs.api.model.Setting;
 import logs.api.model.criteria.SettingCriteria;
 import logs.api.repository.SettingRepository;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController

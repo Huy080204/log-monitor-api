@@ -6,8 +6,8 @@ import lombok.Data;
 import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.QueryTemplateType;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 @Data
 @Schema

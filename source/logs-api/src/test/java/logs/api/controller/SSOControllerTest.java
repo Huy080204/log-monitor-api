@@ -5,9 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 
 import logs.api.constant.BaseConstant;
 import logs.api.dto.ApiMessageDto;
@@ -23,7 +20,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,23 +46,13 @@ class SSOControllerTest {
         Account account = new Account();
         when(userService.getAddInfoFromToken()).thenReturn(TestUtils.jwtWithAccountId(1L));
         when(accountRepository.findByIdAndStatus(1L, BaseConstant.STATUS_ACTIVE)).thenReturn(Optional.of(account));
+        when(userService.getCurrentToken()).thenReturn("token-value");
+        ApiMessageDto<String> expected = new ApiMessageDto<>();
+        when(feignSSOService.verifyToken(BaseConstant.AUTH_BEARER_TOKEN + "token-value")).thenReturn(expected);
 
-        Authentication authentication = mock(Authentication.class);
-        OAuth2AuthenticationDetails details = mock(OAuth2AuthenticationDetails.class);
-        when(authentication.getDetails()).thenReturn(details);
-        when(details.getTokenValue()).thenReturn("token-value");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        ApiMessageDto<String> result = controller.login();
 
-        try {
-            ApiMessageDto<String> expected = new ApiMessageDto<>();
-            when(feignSSOService.verifyToken(BaseConstant.AUTH_BEARER_TOKEN + "token-value")).thenReturn(expected);
-
-            ApiMessageDto<String> result = controller.login();
-
-            assertThat(result).isSameAs(expected);
-            verify(feignSSOService).verifyToken(BaseConstant.AUTH_BEARER_TOKEN + "token-value");
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+        assertThat(result).isSameAs(expected);
+        verify(feignSSOService).verifyToken(BaseConstant.AUTH_BEARER_TOKEN + "token-value");
     }
 }

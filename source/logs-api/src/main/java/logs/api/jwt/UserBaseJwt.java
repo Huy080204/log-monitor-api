@@ -47,7 +47,7 @@ public class UserBaseJwt implements Serializable {
                 result.setTabletKind(parserInt(items[8]));
                 result.setOrderId(parserLong(items[9]));
                 result.setAttribute(checkString(items[10]));
-                if (items.length > 12) {
+                if (items.length >= 12) {
                     result.setTenantId(checkString(items[11]));
                 }
                 result.setAttributeDto(new ObjectMapper().readValue(result.getAttribute(), AttributeDto.class));

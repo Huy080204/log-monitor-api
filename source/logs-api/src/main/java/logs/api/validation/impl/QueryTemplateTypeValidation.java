@@ -3,8 +3,8 @@ package logs.api.validation.impl;
 import logs.api.constant.BaseConstant;
 import logs.api.validation.QueryTemplateType;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 public class QueryTemplateTypeValidation implements ConstraintValidator<QueryTemplateType, Integer> {
 

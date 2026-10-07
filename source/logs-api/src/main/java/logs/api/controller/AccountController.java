@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -25,7 +26,7 @@ import logs.api.model.criteria.AccountCriteria;
 import logs.api.repository.AccountRepository;
 import logs.api.service.impl.UserServiceImpl;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -85,6 +86,7 @@ public class AccountController extends ABasicController {
 
     @Hidden
     @PostMapping(value = "/synchronize", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ApiMessageDto<Void> synchronizeAccounts(@Valid @RequestBody AccountAppsDto accountAppsDto, BindingResult bindingResult) {
         if (!accountAppsDto.getSecretIdApp().equals(secretId)) {
             throw new BadRequestException("Invalid secret ID", ErrorCode.ACCOUNT_ERROR_INVALID_SECRET_ID);
