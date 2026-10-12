@@ -60,13 +60,9 @@ def buildDev(){
     if (_BRANCH_NAME.matches(TARTGET_BRANCH_DEPLOY)) {
 
         stage("Build source") {
-            def jdkHome = tool name: 'jdk17', type: 'jdk'
+            def jdkHome = tool name: 'jdk21', type: 'jdk'
             withEnv( ["PATH+MAVEN=/usr/bin", "JAVA_HOME=${jdkHome}", "PATH+JDK=${jdkHome}/bin"] ) {
                 sh """
-                    java -version
-                    # dev-ops/src, dev-ops/pom.xml and dev-ops/target are build artifacts, not tracked by git,
-                    # so `checkout scm` never removes them. Without this `cp -r` would only overwrite and add,
-                    # leaving files deleted from the repo behind and breaking the compile.
                     rm -rf dev-ops/src dev-ops/pom.xml dev-ops/target
                     cp -r source/logs-api/* dev-ops/
                     cd dev-ops
