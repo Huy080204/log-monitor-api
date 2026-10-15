@@ -170,7 +170,7 @@ public class SnowFlakeIdService {
             return (long)(sums % 32);
         } catch (UnknownHostException e) {
             // If the acquisition fails, use a random number to reserve
-            return RandomUtils.nextLong(0,31);
+            return RandomUtils.insecure().randomLong(0, 31);
         }
     }
 

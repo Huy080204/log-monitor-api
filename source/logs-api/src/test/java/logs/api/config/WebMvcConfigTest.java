@@ -1,7 +1,8 @@
 package logs.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -20,7 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class WebMvcConfigTest {
 
-    @Data
+    @Getter
+    @Setter
     static class Sample {
         private Long id = 7L;
         private String name = "rule";
@@ -32,7 +34,8 @@ class WebMvcConfigTest {
         private LocalDateTime at = LocalDateTime.of(2026, 9, 28, 13, 45, 30);
     }
 
-    @Data
+    @Getter
+    @Setter
     static class Target {
         private String name;
     }

@@ -1,12 +1,14 @@
 package logs.api.form.setting;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class CreateSettingForm {
     @NotBlank(message = "groupName cannot be null")

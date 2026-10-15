@@ -3,7 +3,8 @@ package logs.api.model.criteria;
 
 import logs.api.model.Account;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -12,7 +13,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class AccountCriteria implements Serializable{
     private static final long serialVersionUID = 1L;
     private Long id;
@@ -40,16 +42,16 @@ public class AccountCriteria implements Serializable{
                 if(getStatus() != null){
                     predicates.add(cb.equal(root.get("status"), getStatus()));
                 }
-                if(!StringUtils.isEmpty(getUsername())){
+                if(StringUtils.hasLength(getUsername())){
                     predicates.add(cb.like(cb.lower(root.get("username")), "%"+getUsername().toLowerCase()+"%"));
                 }
-                if(!StringUtils.isEmpty(getEmail())){
+                if(StringUtils.hasLength(getEmail())){
                     predicates.add(cb.like(cb.lower(root.get("email")), "%"+getEmail().toLowerCase()+"%"));
                 }
-                if(!StringUtils.isEmpty(getFullName())){
+                if(StringUtils.hasLength(getFullName())){
                     predicates.add(cb.like(cb.lower(root.get("fullName")), "%"+getFullName().toLowerCase()+"%"));
                 }
-                if (!StringUtils.isEmpty(getPhone())) {
+                if (StringUtils.hasLength(getPhone())) {
                     predicates.add(cb.like(cb.lower(root.get("phone")), "%" + getPhone().toLowerCase() + "%"));
                 }
                 if(getKind() != null){

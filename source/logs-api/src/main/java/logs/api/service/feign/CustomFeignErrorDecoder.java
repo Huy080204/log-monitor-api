@@ -1,6 +1,7 @@
 package logs.api.service.feign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import logs.api.exception.NotFoundException;
 import feign.Request;
 import feign.RetryableException;
@@ -17,7 +18,6 @@ import logs.api.exception.UnauthorizedException;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Date;
 
 @Component
 @Slf4j
@@ -44,17 +44,17 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
         switch (response.status()) {
             case 401:
                 try {
-                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, ApiMessageDto.class);
+                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, new TypeReference<ApiMessageDto<String>>() {});
                     return new UnauthorizedException(apiMessageDto.getMessage(), apiMessageDto.getCode());
                 } catch (JsonProcessingException e) {
                     log.error("Error parsing response body", e);
                     return new RuntimeException("Invalid response format: " + message);
                 }
             case 403:
-                return new RetryableException(403, message, request.httpMethod(), new Date(), request);
+                return new RetryableException(403, message, request.httpMethod(), System.currentTimeMillis(), request);
             case 400:
                 try {
-                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, ApiMessageDto.class);
+                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, new TypeReference<ApiMessageDto<String>>() {});
                     return new BadRequestException(apiMessageDto.getMessage(), apiMessageDto.getCode());
                 } catch (JsonProcessingException e) {
                     log.error("Error parsing response body", e);
@@ -62,7 +62,7 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
                 }
             case 404:
                 try {
-                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, ApiMessageDto.class);
+                    ApiMessageDto<String> apiMessageDto = objectMapper.readValue(message, new TypeReference<ApiMessageDto<String>>() {});
                     return new NotFoundException(apiMessageDto.getMessage(), apiMessageDto.getCode());
                 } catch (JsonProcessingException e) {
                     log.error("Error parsing response body", e);

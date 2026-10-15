@@ -1,6 +1,7 @@
 package logs.api.jwt;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import logs.api.jwt.dto.AttributeDto;
@@ -9,7 +10,8 @@ import logs.api.utils.ZipUtils;
 import java.io.Serializable;
 
 @Slf4j
-@Data
+@Getter
+@Setter
 public class UserBaseJwt implements Serializable {
     public static final String DELIM = "\\|";
     public static final String EMPTY_STRING = "<>";

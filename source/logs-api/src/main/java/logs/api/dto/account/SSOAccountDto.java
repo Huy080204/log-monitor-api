@@ -1,9 +1,11 @@
 package logs.api.dto.account;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class SSOAccountDto {
     @Schema(name = "id")
     private Long id;

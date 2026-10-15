@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.dto.ABasicAdminDto;
 import logs.api.dto.LongToStringIfWebSerializer;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class NotificationLogDto extends ABasicAdminDto {
     @Schema(name = "appId")

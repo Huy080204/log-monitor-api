@@ -2,7 +2,8 @@ package logs.api.model.criteria;
 
 import logs.api.model.Setting;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -14,7 +15,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class SettingCriteria implements Serializable {
     private Long id;
     private String groupName;

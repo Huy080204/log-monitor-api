@@ -5,7 +5,8 @@ import logs.api.model.Applications;
 import logs.api.model.NotificationGroup;
 import logs.api.model.NotificationQuery;
 import logs.api.model.QueryTemplate;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -18,7 +19,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class NotificationQueryCriteria implements Serializable {
 
     private Long id;

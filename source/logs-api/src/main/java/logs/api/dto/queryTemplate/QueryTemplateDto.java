@@ -1,11 +1,13 @@
 package logs.api.dto.queryTemplate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import logs.api.dto.ABasicAdminDto;
 import logs.api.dto.applications.ApplicationsDto;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class QueryTemplateDto extends ABasicAdminDto {
     @Schema(name = "name")

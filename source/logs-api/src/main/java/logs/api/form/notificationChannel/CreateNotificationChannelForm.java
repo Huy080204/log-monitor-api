@@ -2,11 +2,13 @@ package logs.api.form.notificationChannel;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.validation.NotificationChannelType;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotBlank;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class CreateNotificationChannelForm {
     @NotBlank(message = "name cannot be null")

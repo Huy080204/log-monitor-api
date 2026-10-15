@@ -1,11 +1,13 @@
 package logs.api.form.applications;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotBlank;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class CreateApplicationsForm {
     @NotBlank(message = "name cannot be null")

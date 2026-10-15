@@ -1,7 +1,8 @@
 package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import logs.api.model.Applications;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -14,7 +15,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class ApplicationsCriteria implements Serializable {
 
     private Long id;
@@ -38,7 +40,7 @@ public class ApplicationsCriteria implements Serializable {
                     predicates.add(cb.equal(root.get("status"), getStatus()));
                 }
 
-                if (!StringUtils.isEmpty(getName())) {
+                if (StringUtils.hasLength(getName())) {
                     predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 

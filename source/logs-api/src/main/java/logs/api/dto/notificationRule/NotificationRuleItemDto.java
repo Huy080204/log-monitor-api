@@ -4,9 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.dto.ABasicAdminDto;
 import logs.api.dto.applications.ApplicationsDto;
 import logs.api.dto.queryTemplate.QueryTemplateDto;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class NotificationRuleItemDto extends ABasicAdminDto {
     @Schema(name = "application")

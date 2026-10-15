@@ -3,11 +3,13 @@ package logs.api.form.notificationQuery;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotNull;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class NotificationQueryLinkForm {
     @NotNull(message = "queryTemplateId cannot be null")

@@ -2,14 +2,16 @@ package logs.api.form.queryTemplate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.QueryTemplateType;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class CreateQueryTemplateForm {
     @NotBlank(message = "name cannot be null")

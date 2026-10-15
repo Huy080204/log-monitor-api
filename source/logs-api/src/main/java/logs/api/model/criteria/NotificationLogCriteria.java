@@ -2,7 +2,8 @@ package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.model.NotificationLog;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -14,7 +15,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class NotificationLogCriteria implements Serializable {
 
     private Long id;
@@ -38,11 +40,11 @@ public class NotificationLogCriteria implements Serializable {
                     predicates.add(cb.equal(root.get("appId"), getAppId()));
                 }
 
-                if (!StringUtils.isEmpty(getAppName())) {
+                if (StringUtils.hasLength(getAppName())) {
                     predicates.add(cb.like(cb.lower(root.get("appName")), "%" + getAppName().toLowerCase() + "%"));
                 }
 
-                if (!StringUtils.isEmpty(getErrorName())) {
+                if (StringUtils.hasLength(getErrorName())) {
                     predicates.add(cb.like(cb.lower(root.get("errorName")), "%" + getErrorName().toLowerCase() + "%"));
                 }
 
