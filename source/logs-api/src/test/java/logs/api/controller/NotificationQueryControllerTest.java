@@ -393,10 +393,7 @@ class NotificationQueryControllerTest {
         assertThat(saveAllCaptor.getValue()).hasSize(1);
         assertThat(saveAllCaptor.getValue().get(0).getQueryTemplate()).isSameAs(t3);
         assertThat(saveAllCaptor.getValue().get(0).getNotificationGroup()).isSameAs(group);
-        // NotificationQuery inherits ReuseId's Lombok @Data equals() (compares only the
-        // always-null `reusedId`), so an equals()-based contains/doesNotContain would be a
-        // false positive here — assert by reference instead.
-        assertThat(saveAllCaptor.getValue()).noneMatch(nq -> nq == row2);
+        assertThat(saveAllCaptor.getValue()).doesNotContain(row2);
         // status untouched — sync never re-saves a retained row, so PENDING must not be reset.
         assertThat(row2.getStatus()).isEqualTo(BaseConstant.STATUS_PENDING);
     }
