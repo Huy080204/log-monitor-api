@@ -2,9 +2,11 @@ package logs.api.dto.applications;
 
 import logs.api.dto.ABasicAdminDto;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class ApplicationsDto extends ABasicAdminDto {
     @Schema(name = "name")

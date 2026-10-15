@@ -1,7 +1,8 @@
 package logs.api.model.criteria;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import logs.api.model.Applications;
 import logs.api.model.NotificationQuery;
 import logs.api.model.QueryTemplate;
@@ -20,7 +21,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class QueryTemplateCriteria implements Serializable {
 
     private Long id;
@@ -45,7 +47,7 @@ public class QueryTemplateCriteria implements Serializable {
                     predicates.add(cb.equal(root.get("id"), getId()));
                 }
 
-                if (!StringUtils.isEmpty(getName())) {
+                if (StringUtils.hasLength(getName())) {
                     predicates.add(cb.like(cb.lower(root.get("name")), "%" + getName().toLowerCase() + "%"));
                 }
 

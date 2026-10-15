@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.form.StringToLongDeserializer;
 import logs.api.validation.RuleItemOperators;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -12,7 +13,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class CreateNotificationRuleForm {
     @NotNull(message = "notificationGroupId cannot be null")

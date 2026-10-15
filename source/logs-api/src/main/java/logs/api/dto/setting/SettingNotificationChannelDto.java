@@ -1,8 +1,10 @@
 package logs.api.dto.setting;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class SettingNotificationChannelDto {
     private Integer type;
     private String channel;

@@ -5,9 +5,11 @@ import logs.api.dto.ABasicAdminDto;
 import logs.api.dto.applications.ApplicationsDto;
 import logs.api.dto.notificationGroup.NotificationGroupDto;
 import logs.api.dto.queryTemplate.QueryTemplateDto;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class NotificationQueryDto extends ABasicAdminDto {
     @Schema(name = "notificationGroup")

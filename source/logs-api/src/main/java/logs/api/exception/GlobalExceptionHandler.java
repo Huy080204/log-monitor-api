@@ -123,14 +123,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler({ConstraintViolationException.class})
-    public ResponseEntity handleConstraintViolation(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleConstraintViolation(
             ConstraintViolationException ex, WebRequest request) {
         ex.printStackTrace();
         Map<String, Object> errors = new HashMap<>();
         for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
             errors.put(violation.getPropertyPath().toString(), violation.getPropertyPath() + " | " + violation.getMessage());
         }
-        return new ResponseEntity(new ApiResponse(HttpStatus.BAD_REQUEST, BAD_REQUEST, errors), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.BAD_REQUEST, BAD_REQUEST, errors), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({DataAccessException.class})

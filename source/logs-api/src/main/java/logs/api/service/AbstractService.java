@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-public class AbstractService<T extends JpaRepository, K> {
+public class AbstractService<T extends JpaRepository<K, Long>, K> {
     @Autowired
     private T repo;
 
@@ -23,7 +23,7 @@ public class AbstractService<T extends JpaRepository, K> {
 
     @Transactional
     public K save(K k){
-        return (K)repo.save(k);
+        return repo.save(k);
     }
 
     @Transactional

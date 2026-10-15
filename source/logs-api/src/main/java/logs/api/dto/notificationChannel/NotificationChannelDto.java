@@ -2,9 +2,11 @@ package logs.api.dto.notificationChannel;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import logs.api.dto.ABasicAdminDto;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Schema
 public class NotificationChannelDto extends ABasicAdminDto {
     @Schema(name = "name")
